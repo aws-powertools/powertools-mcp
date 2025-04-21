@@ -70,7 +70,7 @@ describe('[DocFetcher] When validating URLs', () => {
     await fetchDocPage(validUrl);
     
     // Verify
-    expect(mockFetch).toHaveBeenCalledWith(validUrl);
+    expect(mockFetch).toHaveBeenCalledWith(validUrl, expect.anything());
   });
 });
 

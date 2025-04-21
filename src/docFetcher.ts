@@ -3,6 +3,12 @@ import * as cheerio from 'cheerio';
 // Allowed domain for security
 const ALLOWED_DOMAIN = 'docs.powertools.aws.dev';
 
+// Constants for performance tuning
+const FETCH_TIMEOUT_MS = 15000; // 15 seconds timeout for fetch operations
+const PROCESSING_BATCH_SIZE = 10; // Number of elements to process in a batch
+const MAX_RECURSION_DEPTH = 5; // Maximum recursion depth for element processing
+const CHUNK_SIZE_THRESHOLD = 10000; // Minimum HTML size to process in chunks
+
 /**
  * Validates that a URL belongs to the allowed domain
  * @param url The URL to validate
@@ -18,11 +24,18 @@ function isValidUrl(url: string): boolean {
 }
 
 /**
- * Converts an HTML element to markdown
- * @param $elem The cheerio element to convert
+ * Converts an HTML element to markdown with recursion depth limit
+ * @param $ The cheerio API instance
+ * @param elem The element to convert
+ * @param depth Current recursion depth
  * @returns The markdown string
  */
-function elementToMarkdown($: cheerio.CheerioAPI, elem: any): string {
+function elementToMarkdown($: cheerio.CheerioAPI, elem: any, depth: number = 0): string {
+  // Limit recursion depth to prevent stack overflow
+  if (depth > MAX_RECURSION_DEPTH) {
+    return '';
+  }
+
   const tagName = elem.tagName.toLowerCase();
   const $elem = $(elem);
   const text = $elem.text().trim();
@@ -54,15 +67,16 @@ function elementToMarkdown($: cheerio.CheerioAPI, elem: any): string {
     case 'p':
       return `${text}\n\n`;
     case 'ul': {
-      // Process list items recursively
+      // Process list items with depth control
       let ulMarkdown = '\n';
       $elem.find('> li').each((i, li) => {
+        // Increment depth for child elements
         ulMarkdown += `* ${$(li).text().trim()}\n`;
       });
       return ulMarkdown + '\n';
     }
     case 'ol': {
-      // Process ordered list items recursively
+      // Process ordered list items with depth control
       let olMarkdown = '\n';
       $elem.find('> li').each((i, li) => {
         olMarkdown += `${i+1}. ${$(li).text().trim()}\n`;
@@ -84,6 +98,32 @@ function elementToMarkdown($: cheerio.CheerioAPI, elem: any): string {
     default:
       return text ? `${text}\n\n` : '';
   }
+}
+
+/**
+ * Process DOM elements in batches to prevent thread blocking
+ * @param $ The cheerio API instance
+ * @param elements Array of elements to process
+ * @returns The markdown string
+ */
+async function processDomElementsInBatches($: cheerio.CheerioAPI, elements: any[]): Promise<string> {
+  let markdown = '';
+  
+  // Process elements in smaller batches
+  for (let i = 0; i < elements.length; i += PROCESSING_BATCH_SIZE) {
+    const batch = elements.slice(i, i + PROCESSING_BATCH_SIZE);
+    
+    for (const elem of batch) {
+      markdown += elementToMarkdown($, elem);
+    }
+    
+    // Allow event loop to continue by yielding execution
+    if (i + PROCESSING_BATCH_SIZE < elements.length) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+  }
+  
+  return markdown;
 }
 
 // Add a simple cache for documentation pages
@@ -116,42 +156,78 @@ export async function fetchDocPage(url: string): Promise<string> {
       }
     }
     
-    // Fetch the HTML content with streaming
-    const response = await fetch(url);
+    // Set up fetch with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     
-    if (!response.ok) {
-      throw new Error(`Failed to fetch page: ${response.status} ${response.statusText}`);
-    }
-    
-    // Get the response as a stream
-    const bodyStream = response.body;
-    
-    if (!bodyStream) {
-      throw new Error('Response body stream is null');
-    }
-    
-    // Create a readable stream from the response body
-    const reader = bodyStream.getReader();
-    const decoder = new TextDecoder();
-    
-    let html = '';
-    let markdown = '';
-    
-    // Process the stream in chunks
-    while (true) {
-      const { done, value } = await reader.read();
+    try {
+      // Fetch the HTML content with streaming and timeout
+      const response = await fetch(url, { signal: controller.signal });
       
-      if (done) {
-        break;
+      // Clear the timeout as request completed
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch page: ${response.status} ${response.statusText}`);
       }
       
-      // Decode the chunk and append to HTML
-      const chunk = decoder.decode(value, { stream: true });
-      html += chunk;
+      // Get the response as a stream
+      const bodyStream = response.body;
       
-      // If we have enough HTML to start processing, do it in chunks
-      if (html.length > 10000 && html.includes('</div>')) {
-        // Process this chunk
+      if (!bodyStream) {
+        throw new Error('Response body stream is null');
+      }
+      
+      // Create a readable stream from the response body
+      const reader = bodyStream.getReader();
+      const decoder = new TextDecoder();
+      
+      let html = '';
+      let markdown = '';
+      
+      // Process the stream in chunks
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) {
+          break;
+        }
+        
+        // Decode the chunk and append to HTML
+        const chunk = decoder.decode(value, { stream: true });
+        html += chunk;
+        
+        // If we have enough HTML to start processing, do it in chunks
+        if (html.length > CHUNK_SIZE_THRESHOLD && html.includes('</div>')) {
+          // Process this chunk
+          const $ = cheerio.load(html);
+          
+          // Remove script and style tags
+          $('script, style').remove();
+          
+          // Extract the main content - specifically target the md-content container
+          const mainContent = $('div.md-content[data-md-component="content"]');
+          const contentToProcess = mainContent.length > 0 ? mainContent : $('body');
+          
+          // Process title only once
+          if (markdown === '') {
+            const title = $('h1').first().text().trim() || $('title').text().trim();
+            if (title) {
+              markdown += `# ${title}\n\n`;
+            }
+          }
+          
+          // Process elements in batches
+          const elements = contentToProcess.children().toArray();
+          markdown += await processDomElementsInBatches($, elements);
+          
+          // Reset HTML buffer to avoid reprocessing
+          html = '';
+        }
+      }
+      
+      // Process any remaining HTML
+      if (html.length > 0) {
         const $ = cheerio.load(html);
         
         // Remove script and style tags
@@ -161,7 +237,7 @@ export async function fetchDocPage(url: string): Promise<string> {
         const mainContent = $('div.md-content[data-md-component="content"]');
         const contentToProcess = mainContent.length > 0 ? mainContent : $('body');
         
-        // Process title only once
+        // Process title if we haven't yet
         if (markdown === '') {
           const title = $('h1').first().text().trim() || $('title').text().trim();
           if (title) {
@@ -169,54 +245,28 @@ export async function fetchDocPage(url: string): Promise<string> {
           }
         }
         
-        // Process elements in order
-        contentToProcess.children().each((i, elem) => {
-          markdown += elementToMarkdown($, elem);
-        });
-        
-        // Reset HTML buffer to avoid reprocessing
-        html = '';
+        // Process elements in batches
+        const elements = contentToProcess.children().toArray();
+        markdown += await processDomElementsInBatches($, elements);
       }
-    }
-    
-    // Process any remaining HTML
-    if (html.length > 0) {
-      const $ = cheerio.load(html);
       
-      // Remove script and style tags
-      $('script, style').remove();
-      
-      // Extract the main content - specifically target the md-content container
-      const mainContent = $('div.md-content[data-md-component="content"]');
-      const contentToProcess = mainContent.length > 0 ? mainContent : $('body');
-      
-      // Process title if we haven't yet
-      if (markdown === '') {
-        const title = $('h1').first().text().trim() || $('title').text().trim();
-        if (title) {
-          markdown += `# ${title}\n\n`;
+      // If we didn't extract much structured content, fall back to text
+      if (markdown.length < 100) {
+        const $ = cheerio.load(html);
+        const bodyText = $('body').text().trim();
+        if (bodyText) {
+          markdown = bodyText;
         }
       }
       
-      // Process elements in order
-      contentToProcess.children().each((i, elem) => {
-        markdown += elementToMarkdown($, elem);
-      });
+      // Store in cache
+      docCache.set(url, {content: markdown, timestamp: Date.now()});
+      
+      return markdown;
+    } finally {
+      // Ensure timeout is cleared in all cases
+      clearTimeout(timeoutId);
     }
-    
-    // If we didn't extract much structured content, fall back to text
-    if (markdown.length < 100) {
-      const $ = cheerio.load(html);
-      const bodyText = $('body').text().trim();
-      if (bodyText) {
-        markdown = bodyText;
-      }
-    }
-    
-    // Store in cache
-    docCache.set(url, {content: markdown, timestamp: Date.now()});
-    
-    return markdown;
   } catch (error) {
     console.error(`Error fetching doc page: ${error}`);
     return `Error fetching documentation: ${error instanceof Error ? error.message : String(error)}`;
