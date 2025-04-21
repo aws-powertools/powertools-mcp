@@ -35,6 +35,7 @@ The server can be run as an MCP server that communicates over stdio:
 node dist/bundle.js
 ```
 
+
 ### Search Tool
 
 The server provides a `search_docs` tool with the following parameters:
@@ -65,15 +66,36 @@ pnpm build
 pnpm test
 ```
 
+### Claude Desktop MCP Configuration
+
+During development you can run the MCP Server with CLaude Desktop using the following configuration.
+
+The configuration below shows running in windows claude desktop while developing using the Windows Subsystem for Linux (WSL).  Mac or Linux environments you can run in a similar way.  
+
+The output is a bundled file which enables Node installed in windows to run the MCP server since all dependencies are bundled.
+
+```json
+{
+  "mcpServers": {
+    "powertools": {
+	"command": "node",
+	"args": [
+	  "\\\\wsl$\\Ubuntu\\home\\walmsles\\dev\\serverless-dna\\powertools-mcp\\dist\\bundle.js"
+	]
+    }
+  }
+}
+```
+
 ## How It Works
 
 1. The server loads pre-built lunr.js indexes for each supported runtime
 2. When a search request is received, it:
-   - Loads the appropriate index based on runtime and version
+   - Loads the appropriate index based on runtime and version (currently fixed to latest)
    - Performs the search using lunr.js
    - Returns the search results as JSON
 3. The LLM can then use these results to find relevant documentation pages
 
 ## License
 
-ISC
+MIT
