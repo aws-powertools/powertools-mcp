@@ -2,6 +2,24 @@
 
 A Model Context Protocol (MCP) server that provides search functionality for AWS Lambda Powertools documentation across multiple runtimes.
 
+## Claude Desktop Quickstart
+
+Follow the installation instructions please follow the [Model Context Protocol Quickstart For Claude Desktop users](https://modelcontextprotocol.io/quickstart/user#mac-os-linux).  You will need to add a section tothe MCP configuration file as follows:
+
+```json
+{
+  "mcpServers": {
+    "powertools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@serverless-dna/powertools-mcp"
+      ]
+    }
+  }
+}
+```
+
 ## Overview
 
 This project implements an MCP server that enables Large Language Models (LLMs) to search through AWS Lambda Powertools documentation. It uses lunr.js for efficient local search capabilities and provides results that can be summarized and presented to users.
@@ -32,7 +50,7 @@ pnpm build
 The server can be run as an MCP server that communicates over stdio:
 
 ```bash
-node dist/bundle.js
+npx -y @serverless-dna/powertools-mcp
 ```
 
 
@@ -68,7 +86,7 @@ pnpm test
 
 ### Claude Desktop MCP Configuration
 
-During development you can run the MCP Server with CLaude Desktop using the following configuration.
+During development you can run the MCP Server with Claude Desktop using the following configuration.
 
 The configuration below shows running in windows claude desktop while developing using the Windows Subsystem for Linux (WSL).  Mac or Linux environments you can run in a similar way.  
 
