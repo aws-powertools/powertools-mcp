@@ -3,14 +3,13 @@
   "version": "1.0.0",
   "description": "Powertools for AWS Lambda Documentation MCP Server",
   "main": "dist/bundle.js",
-  "type": "module",
   "scripts": {
     "prebuild": "rimraf dist/* && pnpm lint",
     "build": "rollup -c",
     "test": "jest",
-    "lint": "eslint",
+    "lint": "eslint --config eslint.config.mjs",
     "test:ci": "jest --ci",
-    "lint:fix": "eslint --fix",
+    "lint:fix": "eslint --fix --config eslint.config.mjs",
     "postversion": "pnpm build",
     "release": "semantic-release"
   },

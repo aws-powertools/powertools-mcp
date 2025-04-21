@@ -1,12 +1,12 @@
-import commonjs from '@rollup/plugin-commonjs';
-import json from '@rollup/plugin-json';
-import resolve from '@rollup/plugin-node-resolve';
-import typescript from '@rollup/plugin-typescript';
+const commonjs = require('@rollup/plugin-commonjs');
+const json = require('@rollup/plugin-json');
+const resolve = require('@rollup/plugin-node-resolve');
+const typescript = require('@rollup/plugin-typescript');
 
-export default {
-  input: 'src/index.ts', // Change this to your entry point
+module.exports = {
+  input: 'src/index.ts',
   output: {
-    file: 'dist/bundle.cjs',
+    file: 'dist/bundle.js',
     format: 'cjs',
     sourcemap: true
   },
