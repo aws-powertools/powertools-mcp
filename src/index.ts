@@ -92,7 +92,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         
         // Use the searchDocuments function to get enhanced results
         const results = searchDocuments(idx.index, idx.documents, search);
-        console.error('results returned', results);
+        // error('results returned', results);
         
         // Format results for better readability
         const formattedResults = results.map(result => {

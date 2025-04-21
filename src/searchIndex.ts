@@ -97,7 +97,6 @@ export class SearchIndexFactory {
         const cacheKey = this.getCacheKey(runtime, version);
 
         if (this.indices.has(cacheKey)) {
-            console.error(`Returning existing index: ${runtime} (${version})`);
             return this.indices.get(cacheKey);
         }
 
