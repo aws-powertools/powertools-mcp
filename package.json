@@ -1,8 +1,20 @@
 {
-  "name": "powertools-mcp",
-  "version": "1.0.0",
+  "name": "@serverless-dna/powertools-mcp",
+  "version": "0.1.0",
   "description": "Powertools for AWS Lambda Documentation MCP Server",
   "main": "dist/bundle.js",
+  "bin": {
+    "powertools-mcp": "dist/bundle.js"
+  },
+  "files": [
+    "dist/",
+    "indexes/",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/serverless-dna/powertools-mcp.git"
@@ -14,6 +26,7 @@
   "scripts": {
     "prebuild": "rimraf dist/* && pnpm lint",
     "build": "rollup -c",
+    "postbuild": "chmod +x dist/bundle.js",
     "test": "jest",
     "lint": "eslint --config eslint.config.mjs",
     "test:ci": "jest --ci",
@@ -21,8 +34,16 @@
     "postversion": "pnpm build",
     "release": "semantic-release"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "aws",
+    "lambda",
+    "powertools",
+    "documentation",
+    "mcp",
+    "model-context-protocol",
+    "llm"
+  ],
+  "author": "Serverless DNA",
   "license": "ISC",
   "packageManager": "pnpm@10.8.0",
   "dependencies": {

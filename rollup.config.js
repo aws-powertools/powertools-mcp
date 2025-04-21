@@ -2,13 +2,15 @@ const commonjs = require('@rollup/plugin-commonjs');
 const json = require('@rollup/plugin-json');
 const resolve = require('@rollup/plugin-node-resolve');
 const typescript = require('@rollup/plugin-typescript');
+const terser = require('@rollup/plugin-terser');
 
 module.exports = {
   input: 'src/index.ts',
   output: {
     file: 'dist/bundle.js',
     format: 'cjs',
-    sourcemap: true
+    sourcemap: true,
+    banner: '#!/usr/bin/env node\n' // Add shebang line for executable
   },
   plugins: [
     // Handle TypeScript files
@@ -32,6 +34,7 @@ module.exports = {
       transformMixedEsModules: true,
     }),
     json(),
+    terser(), // Minify the output
   ],
   // Empty external array means include everything
   external: []
