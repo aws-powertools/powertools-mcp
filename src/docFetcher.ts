@@ -1,8 +1,7 @@
-import TurndownService from 'turndown';
-
 // Import domino using dynamic import to avoid TypeScript module issues
 // @ts-expect-error - Importing domino which doesn't have proper TypeScript definitions
 import domino from '@mixmark-io/domino';
+import TurndownService from 'turndown';
 
 // Allowed domain for security
 const ALLOWED_DOMAIN = 'docs.powertools.aws.dev';
