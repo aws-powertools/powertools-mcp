@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Powertools MCP Repository
+    url: https://github.com/serverless-dna/powertools-mcp
+    about: Check the main repository for Powertools MCP
+  - name: GitHub Discussions
+    url: https://github.com/serverless-dna/powertools-mcp/discussions
+    about: Ask questions and discuss with other community members
