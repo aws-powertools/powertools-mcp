@@ -1,8 +1,20 @@
 {
-  "name": "powertools-mcp",
-  "version": "1.0.0",
+  "name": "@serverless-dna/powertools-mcp",
+  "version": "0.2.0",
   "description": "Powertools for AWS Lambda Documentation MCP Server",
   "main": "dist/bundle.js",
+  "bin": {
+    "powertools-mcp": "dist/bundle.js"
+  },
+  "files": [
+    "dist/",
+    "indexes/",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/serverless-dna/powertools-mcp.git"
@@ -14,6 +26,7 @@
   "scripts": {
     "prebuild": "rimraf dist/* && pnpm lint",
     "build": "rollup -c",
+    "postbuild": "chmod +x dist/bundle.js",
     "test": "jest",
     "lint": "eslint --config eslint.config.mjs",
     "test:ci": "jest --ci",
@@ -21,8 +34,16 @@
     "postversion": "pnpm build",
     "release": "semantic-release"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "aws",
+    "lambda",
+    "powertools",
+    "documentation",
+    "mcp",
+    "model-context-protocol",
+    "llm"
+  ],
+  "author": "Serverless DNA",
   "license": "ISC",
   "packageManager": "pnpm@10.8.0",
   "dependencies": {
@@ -33,6 +54,7 @@
     "html-to-markdown": "^1.0.0",
     "lunr": "^2.3.9",
     "lunr-languages": "^1.14.0",
+    "turndown": "^7.2.0",
     "zod": "^3.24.3",
     "zod-to-json-schema": "^3.24.5"
   },
@@ -47,6 +69,7 @@
     "@semantic-release/github": "^11.0.1",
     "@types/jest": "^29.5.14",
     "@types/lunr": "^2.3.7",
+    "@types/turndown": "^5.0.5",
     "@typescript-eslint/eslint-plugin": "^8.30.1",
     "@typescript-eslint/parser": "^8.30.1",
     "eslint": "^9.25.0",
