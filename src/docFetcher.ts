@@ -1,13 +1,18 @@
-import * as cheerio from 'cheerio';
+import TurndownService from 'turndown';
+
+// Import domino using dynamic import to avoid TypeScript module issues
+// @ts-expect-error - Importing domino which doesn't have proper TypeScript definitions
+import domino from '@mixmark-io/domino';
 
 // Allowed domain for security
 const ALLOWED_DOMAIN = 'docs.powertools.aws.dev';
 
 // Constants for performance tuning
 const FETCH_TIMEOUT_MS = 15000; // 15 seconds timeout for fetch operations
-const PROCESSING_BATCH_SIZE = 10; // Number of elements to process in a batch
-const MAX_RECURSION_DEPTH = 5; // Maximum recursion depth for element processing
-const CHUNK_SIZE_THRESHOLD = 10000; // Minimum HTML size to process in chunks
+
+// Add a simple cache for documentation pages
+const docCache = new Map<string, {content: string, timestamp: number}>();
+const CACHE_TTL = 3600000; // 1 hour in milliseconds
 
 /**
  * Validates that a URL belongs to the allowed domain
@@ -24,114 +29,78 @@ function isValidUrl(url: string): boolean {
 }
 
 /**
- * Converts an HTML element to markdown with recursion depth limit
- * @param $ The cheerio API instance
- * @param elem The element to convert
- * @param depth Current recursion depth
- * @returns The markdown string
+ * Configure Turndown with custom rules for better Markdown conversion
+ * @returns Configured Turndown service
  */
-function elementToMarkdown($: cheerio.CheerioAPI, elem: any, depth: number = 0): string {
-  // Limit recursion depth to prevent stack overflow
-  if (depth > MAX_RECURSION_DEPTH) {
-    return '';
-  }
+function configureTurndown(): TurndownService {
+  const turndownService = new TurndownService({
+    headingStyle: 'atx',
+    codeBlockStyle: 'fenced',
+    emDelimiter: '*',
+    bulletListMarker: '*',
+    strongDelimiter: '**'
+  });
 
-  const tagName = elem.tagName.toLowerCase();
-  const $elem = $(elem);
-  const text = $elem.text().trim();
-  
-  if (!text) return '';
-  
-  // Handle code blocks with syntax highlighting
-  if (tagName === 'pre' && $elem.find('code').length > 0) {
-    const $code = $elem.find('code').first();
-    const codeText = $code.text().trim();
-    const codeClass = $code.attr('class') || '';
-    const lang = codeClass.match(/language-(\w+)/)?.[1] || '';
-    return `\`\`\`${lang}\n${codeText}\n\`\`\`\n\n`;
-  }
-  
-  switch (tagName) {
-    case 'h1':
-      return `# ${text}\n\n`;
-    case 'h2':
-      return `## ${text}\n\n`;
-    case 'h3':
-      return `### ${text}\n\n`;
-    case 'h4':
-      return `#### ${text}\n\n`;
-    case 'h5':
-      return `##### ${text}\n\n`;
-    case 'h6':
-      return `###### ${text}\n\n`;
-    case 'p':
-      return `${text}\n\n`;
-    case 'ul': {
-      // Process list items with depth control
-      let ulMarkdown = '\n';
-      $elem.find('> li').each((i, li) => {
-        // Increment depth for child elements
-        ulMarkdown += `* ${$(li).text().trim()}\n`;
-      });
-      return ulMarkdown + '\n';
+  // Improve code block handling
+  turndownService.addRule('fencedCodeBlock', {
+    filter: (node): boolean => {
+      return (
+        node.nodeName === 'PRE' &&
+        node.firstChild !== null &&
+        node.firstChild.nodeName === 'CODE'
+      );
+    },
+    replacement: (content, node) => {
+      const code = node.firstChild as HTMLElement;
+      const className = code.getAttribute('class') || '';
+      const language = className.match(/language-(\w+)/)?.[1] || '';
+      return `\n\`\`\`${language}\n${code.textContent}\n\`\`\`\n\n`;
     }
-    case 'ol': {
-      // Process ordered list items with depth control
-      let olMarkdown = '\n';
-      $elem.find('> li').each((i, li) => {
-        olMarkdown += `${i+1}. ${$(li).text().trim()}\n`;
-      });
-      return olMarkdown + '\n';
+  });
+
+  // Improve table handling
+  turndownService.addRule('tableRule', {
+    filter: 'table',
+    replacement: (content) => {
+      // For complex tables, we might want to keep the HTML
+      return content.trim() ? `\n\n${content}\n\n` : '';
     }
-    case 'li':
-      return `* ${text}\n`;
-    case 'a': {
-      const href = $elem.attr('href');
-      return href ? `[${text}](${href})` : text;
-    }
-    case 'pre':
-    case 'code':
-      return `\`\`\`\n${text}\n\`\`\`\n\n`;
-    case 'table':
-      // Basic table support
-      return `<table>${$elem.html()}</table>\n\n`;
-    default:
-      return text ? `${text}\n\n` : '';
-  }
+  });
+
+  return turndownService;
 }
 
 /**
- * Process DOM elements in batches to prevent thread blocking
- * @param $ The cheerio API instance
- * @param elements Array of elements to process
- * @returns The markdown string
+ * Extract content from HTML string using domino
+ * @param html The HTML string to process
+ * @returns Object containing title and main content element
  */
-async function processDomElementsInBatches($: cheerio.CheerioAPI, elements: any[]): Promise<string> {
-  let markdown = '';
+function extractContent(html: string): { title: string, content: string } {
+  // Create a DOM document using domino
+  const doc = domino.createDocument(html);
   
-  // Process elements in smaller batches
-  for (let i = 0; i < elements.length; i += PROCESSING_BATCH_SIZE) {
-    const batch = elements.slice(i, i + PROCESSING_BATCH_SIZE);
-    
-    for (const elem of batch) {
-      markdown += elementToMarkdown($, elem);
-    }
-    
-    // Allow event loop to continue by yielding execution
-    if (i + PROCESSING_BATCH_SIZE < elements.length) {
-      await new Promise(resolve => setTimeout(resolve, 0));
-    }
-  }
+  // Remove script and style tags
+  const scripts = doc.querySelectorAll('script, style');
+  scripts.forEach((script: Element) => script.parentNode?.removeChild(script));
   
-  return markdown;
+  // Get the title
+  const titleElement = doc.querySelector('h1') || doc.querySelector('title');
+  const title = titleElement ? titleElement.textContent?.trim() || '' : '';
+  
+  // Extract the main content - specifically target the md-content container
+  const mainContent = doc.querySelector('div.md-content[data-md-component="content"]');
+  
+  // If we found the main content container, use it; otherwise fall back to body
+  const contentElement = mainContent || doc.body;
+  
+  return {
+    title,
+    content: contentElement.innerHTML
+  };
 }
 
-// Add a simple cache for documentation pages
-const docCache = new Map<string, {content: string, timestamp: number}>();
-const CACHE_TTL = 3600000; // 1 hour in milliseconds
-
 /**
- * Fetches a documentation page and converts it to markdown using streaming
+ * Fetches a documentation page and converts it to markdown using Turndown
  * Specifically targets the div.md-content[data-md-component="content"] container
  * Includes caching to reduce repeated requests
  * @param url The URL of the documentation page to fetch
@@ -161,7 +130,7 @@ export async function fetchDocPage(url: string): Promise<string> {
     const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     
     try {
-      // Fetch the HTML content with streaming and timeout
+      // Fetch the HTML content with timeout
       const response = await fetch(url, { signal: controller.signal });
       
       // Clear the timeout as request completed
@@ -171,89 +140,30 @@ export async function fetchDocPage(url: string): Promise<string> {
         throw new Error(`Failed to fetch page: ${response.status} ${response.statusText}`);
       }
       
-      // Get the response as a stream
-      const bodyStream = response.body;
+      // Get the HTML content
+      const html = await response.text();
       
-      if (!bodyStream) {
-        throw new Error('Response body stream is null');
-      }
+      // Extract content from HTML
+      const { title, content } = extractContent(html);
       
-      // Create a readable stream from the response body
-      const reader = bodyStream.getReader();
-      const decoder = new TextDecoder();
+      // Configure Turndown
+      const turndownService = configureTurndown();
       
-      let html = '';
+      // Convert the HTML to Markdown
       let markdown = '';
       
-      // Process the stream in chunks
-      while (true) {
-        const { done, value } = await reader.read();
-        
-        if (done) {
-          break;
-        }
-        
-        // Decode the chunk and append to HTML
-        const chunk = decoder.decode(value, { stream: true });
-        html += chunk;
-        
-        // If we have enough HTML to start processing, do it in chunks
-        if (html.length > CHUNK_SIZE_THRESHOLD && html.includes('</div>')) {
-          // Process this chunk
-          const $ = cheerio.load(html);
-          
-          // Remove script and style tags
-          $('script, style').remove();
-          
-          // Extract the main content - specifically target the md-content container
-          const mainContent = $('div.md-content[data-md-component="content"]');
-          const contentToProcess = mainContent.length > 0 ? mainContent : $('body');
-          
-          // Process title only once
-          if (markdown === '') {
-            const title = $('h1').first().text().trim() || $('title').text().trim();
-            if (title) {
-              markdown += `# ${title}\n\n`;
-            }
-          }
-          
-          // Process elements in batches
-          const elements = contentToProcess.children().toArray();
-          markdown += await processDomElementsInBatches($, elements);
-          
-          // Reset HTML buffer to avoid reprocessing
-          html = '';
-        }
+      // Add title if available
+      if (title) {
+        markdown = `# ${title}\n\n`;
       }
       
-      // Process any remaining HTML
-      if (html.length > 0) {
-        const $ = cheerio.load(html);
-        
-        // Remove script and style tags
-        $('script, style').remove();
-        
-        // Extract the main content - specifically target the md-content container
-        const mainContent = $('div.md-content[data-md-component="content"]');
-        const contentToProcess = mainContent.length > 0 ? mainContent : $('body');
-        
-        // Process title if we haven't yet
-        if (markdown === '') {
-          const title = $('h1').first().text().trim() || $('title').text().trim();
-          if (title) {
-            markdown += `# ${title}\n\n`;
-          }
-        }
-        
-        // Process elements in batches
-        const elements = contentToProcess.children().toArray();
-        markdown += await processDomElementsInBatches($, elements);
-      }
+      // Convert the main content to Markdown
+      markdown += turndownService.turndown(content);
       
       // If we didn't extract much structured content, fall back to text
       if (markdown.length < 100) {
-        const $ = cheerio.load(html);
-        const bodyText = $('body').text().trim();
+        const doc = domino.createDocument(html);
+        const bodyText = doc.body.textContent?.trim() || '';
         if (bodyText) {
           markdown = bodyText;
         }
