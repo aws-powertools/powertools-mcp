@@ -2,6 +2,10 @@
 
 A Model Context Protocol (MCP) server that provides search functionality for AWS Lambda Powertools documentation across multiple runtimes.
 
+<a href="https://glama.ai/mcp/servers/@serverless-dna/powertools-mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@serverless-dna/powertools-mcp/badge" alt="Powertools Search Server MCP server" />
+</a>
+
 ## Claude Desktop Quickstart
 
 Follow the installation instructions please follow the [Model Context Protocol Quickstart For Claude Desktop users](https://modelcontextprotocol.io/quickstart/user#mac-os-linux).  You will need to add a section tothe MCP configuration file as follows:
