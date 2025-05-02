@@ -1,7 +1,6 @@
-import dotnetIndex from '../indexes/dotnet_index.json';
-import javaIndex from '../indexes/java_index.json';
-import pythonIndex from '../indexes/python_index.json';    
-import typescriptIndex from '../indexes/typescript_index.json';
+import cacheConfig from './config/cache';
+import { FetchService } from './services/fetch';
+import { ContentType } from './services/fetch/types';
 
 import lunr from 'lunr';
 
@@ -20,13 +19,45 @@ interface MkDocsSearchIndex {
     }>;
 }
 
-// Map of runtime to index data
-const indexMap = {
-    dotnet: dotnetIndex as MkDocsSearchIndex,
-    java: javaIndex as MkDocsSearchIndex,
-    python: pythonIndex as MkDocsSearchIndex,
-    typescript: typescriptIndex as MkDocsSearchIndex,
-};
+// Initialize the fetch service with disk-based caching
+const fetchService = new FetchService(cacheConfig);
+
+// Base URL for Powertools documentation
+const POWERTOOLS_BASE_URL = 'https://docs.powertools.aws.dev/lambda';
+
+// Function to get the search index URL for a runtime
+function getSearchIndexUrl(runtime: string, version = 'latest'): string {
+    // Python and TypeScript include version in URL, Java and .NET don't
+    if (runtime === 'python' || runtime === 'typescript') {
+        return `${POWERTOOLS_BASE_URL}/${runtime}/${version}/search/search_index.json`;
+    } else {
+        // For Java and .NET, no version in URL
+        return `${POWERTOOLS_BASE_URL}/${runtime}/search/search_index.json`;
+    }
+}
+
+// Function to fetch the search index for a runtime
+async function fetchSearchIndex(runtime: string, version = 'latest'): Promise<MkDocsSearchIndex | undefined> {
+    try {
+        const url = getSearchIndexUrl(runtime, version);
+        const response = await fetchService.fetch(url, {
+            contentType: ContentType.WEB_PAGE,
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch search index: ${response.status} ${response.statusText}`);
+        }
+        
+        const indexData = await response.json();
+        return indexData as MkDocsSearchIndex;
+    } catch (error) {
+        console.error(`Error fetching search index for ${runtime}: ${error}`);
+        return undefined;
+    }
+}
 
 // Define our search index structure
 export interface SearchIndex {
@@ -106,11 +137,11 @@ export class SearchIndexFactory {
 
     protected async loadIndexData(runtime: string, version = 'latest'): Promise<SearchIndex | undefined> {
         try {
-            // Get the index data from the imported JSON
-            const mkDocsIndex = indexMap[runtime as keyof typeof indexMap];
+            // Fetch the index data from the live website
+            const mkDocsIndex = await fetchSearchIndex(runtime, version);
             
             if (!mkDocsIndex) {
-                throw new Error(`Invalid runtime: ${runtime}`);
+                throw new Error(`Failed to fetch index for runtime: ${runtime}`);
             }
             
             // Convert to Lunr index
@@ -120,7 +151,7 @@ export class SearchIndexFactory {
             const searchIndex: SearchIndex = {
                 runtime,
                 version,
-                url: `../indexes/${runtime}_index.json`,
+                url: getSearchIndexUrl(runtime, version),
                 index,
                 documents
             };
