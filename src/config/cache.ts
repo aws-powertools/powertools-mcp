@@ -1,6 +1,7 @@
 /**
  * Cache configuration for the fetch service
  */
+import * as os from 'os';
 import * as path from 'path';
 
 import { CacheConfig, ContentType, RequestCache } from '../services/fetch/types';
@@ -24,7 +25,7 @@ const DEFAULT_MAX_TIMEOUT = 10000; // 10 seconds
  */
 export const cacheConfig: CacheConfig = {
   // Base path for all cache directories
-  basePath: process.env.CACHE_BASE_PATH || path.join(process.cwd(), 'powertools-mcp'),
+  basePath: process.env.CACHE_BASE_PATH || path.join(os.homedir(), '.powertools'),
   
   // Content type specific configurations
   contentTypes: {
