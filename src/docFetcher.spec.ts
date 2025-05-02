@@ -1,4 +1,21 @@
+import { FetchService } from './services/fetch';
+import { ContentType } from './services/fetch/types';
+// Import the module after mocking
 import { fetchDocPage } from './docFetcher';
+
+// Mock the FetchService module with an inline mock function
+jest.mock('./services/fetch', () => {
+  return {
+    FetchService: jest.fn().mockImplementation(() => ({
+      fetch: jest.fn(), // Create the mock function inline
+      clearCache: jest.fn()
+    }))
+  };
+});
+
+// Get a reference to the mock function AFTER it's created
+const mockFetchService = FetchService as jest.MockedFunction<typeof FetchService>;
+const mockFetch = mockFetchService.mock.results[0].value.fetch;
 
 // Helper function to measure memory usage
 function getMemoryUsage(): { heapUsed: number, heapTotal: number } {
@@ -20,10 +37,6 @@ async function measureExecutionTime<T>(fn: () => Promise<T>): Promise<{ result: 
   };
 }
 
-// Mock fetch for testing
-global.fetch = jest.fn();
-const mockFetch = global.fetch as jest.Mock;
-
 // Mock console.error to avoid cluttering test output
 beforeEach(() => {
   jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -31,7 +44,7 @@ beforeEach(() => {
 
 describe('[DocFetcher] When validating URLs', () => {
   beforeEach(() => {
-    mockFetch.mockClear();
+    jest.clearAllMocks();
   });
 
   it('should reject URLs from disallowed domains', async () => {
@@ -51,51 +64,52 @@ describe('[DocFetcher] When validating URLs', () => {
     // Setup
     const validUrl = 'https://docs.powertools.aws.dev/lambda/python/latest/';
     
-    // Mock a successful response with minimal content
+    // Mock a successful response
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      body: {
-        getReader: () => ({
-          read: jest.fn()
-            .mockResolvedValueOnce({ 
-              done: false, 
-              value: new TextEncoder().encode('<html><body><h1>Test</h1></body></html>') 
-            })
-            .mockResolvedValueOnce({ done: true })
-        })
-      }
+      status: 200,
+      statusText: 'OK',
+      headers: new Headers(),
+      url: validUrl,
+      text: jest.fn().mockResolvedValue('<html><body><h1>Test</h1></body></html>'),
+      json: jest.fn(),
+      buffer: jest.fn(),
+      arrayBuffer: jest.fn()
     });
     
     // Execute
     await fetchDocPage(validUrl);
     
     // Verify
-    expect(mockFetch).toHaveBeenCalledWith(validUrl, expect.anything());
+    expect(mockFetch).toHaveBeenCalledWith(
+      validUrl, 
+      expect.objectContaining({
+        contentType: ContentType.WEB_PAGE
+      })
+    );
   });
 });
 
 describe('[DocFetcher] Performance measurements', () => {
   beforeEach(() => {
-    mockFetch.mockClear();
+    jest.clearAllMocks();
   });
 
   it('should measure performance for fetching documentation', async () => {
     // Setup
     const url = 'https://docs.powertools.aws.dev/lambda/python/latest/';
     
-    // Mock a successful response with minimal content
+    // Mock a successful response
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      body: {
-        getReader: () => ({
-          read: jest.fn()
-            .mockResolvedValueOnce({ 
-              done: false, 
-              value: new TextEncoder().encode('<html><body><h1>Test Document</h1><p>Content</p></body></html>') 
-            })
-            .mockResolvedValueOnce({ done: true })
-        })
-      }
+      status: 200,
+      statusText: 'OK',
+      headers: new Headers(),
+      url: url,
+      text: jest.fn().mockResolvedValue('<html><body><h1>Test Document</h1><p>Content</p></body></html>'),
+      json: jest.fn(),
+      buffer: jest.fn(),
+      arrayBuffer: jest.fn()
     });
     
     // Measure initial memory

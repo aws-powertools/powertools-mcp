@@ -10,7 +10,8 @@ module.exports = {
     file: 'dist/bundle.js',
     format: 'cjs',
     sourcemap: true,
-    banner: '#!/usr/bin/env node\n' // Add shebang line for executable
+    banner: '#!/usr/bin/env node\n', // Add shebang line for executable
+    inlineDynamicImports: true // Add this line to inline dynamic imports
   },
   plugins: [
     // Handle TypeScript files
