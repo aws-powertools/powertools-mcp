@@ -1,4 +1,8 @@
 // Import domino using dynamic import to avoid TypeScript module issues
+import cacheConfig from './config/cache';
+import { FetchService } from './services/fetch';
+import { ContentType } from './services/fetch/types';
+
 // @ts-expect-error - Importing domino which doesn't have proper TypeScript definitions
 import domino from '@mixmark-io/domino';
 import TurndownService from 'turndown';
@@ -9,9 +13,8 @@ const ALLOWED_DOMAIN = 'docs.powertools.aws.dev';
 // Constants for performance tuning
 const FETCH_TIMEOUT_MS = 15000; // 15 seconds timeout for fetch operations
 
-// Add a simple cache for documentation pages
-const docCache = new Map<string, {content: string, timestamp: number}>();
-const CACHE_TTL = 3600000; // 1 hour in milliseconds
+// Initialize the fetch service with disk-based caching
+const fetchService = new FetchService(cacheConfig);
 
 /**
  * Validates that a URL belongs to the allowed domain
@@ -101,7 +104,8 @@ function extractContent(html: string): { title: string, content: string } {
 /**
  * Fetches a documentation page and converts it to markdown using Turndown
  * Specifically targets the div.md-content[data-md-component="content"] container
- * Includes caching to reduce repeated requests
+ * Uses disk-based caching with ETag validation for efficient fetching
+ * 
  * @param url The URL of the documentation page to fetch
  * @returns The page content as markdown
  */
@@ -112,28 +116,18 @@ export async function fetchDocPage(url: string): Promise<string> {
       throw new Error(`Invalid URL: Only URLs from ${ALLOWED_DOMAIN} are allowed`);
     }
     
-    // Check cache first
-    const now = Date.now();
-    if (docCache.has(url)) {
-      const cached = docCache.get(url)!;
-      if (now - cached.timestamp < CACHE_TTL) {
-        console.error(`Cache hit for ${url}`);
-        return cached.content;
-      } else {
-        console.error(`Cache expired for ${url}`);
+    // Set up fetch options with timeout
+    const fetchOptions = {
+      timeout: FETCH_TIMEOUT_MS,
+      contentType: ContentType.WEB_PAGE,
+      headers: {
+        'Accept': 'text/html'
       }
-    }
-    
-    // Set up fetch with timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    };
     
     try {
-      // Fetch the HTML content with timeout
-      const response = await fetch(url, { signal: controller.signal });
-      
-      // Clear the timeout as request completed
-      clearTimeout(timeoutId);
+      // Fetch the HTML content with disk-based caching
+      const response = await fetchService.fetch(url, fetchOptions);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch page: ${response.status} ${response.statusText}`);
@@ -168,16 +162,20 @@ export async function fetchDocPage(url: string): Promise<string> {
         }
       }
       
-      // Store in cache
-      docCache.set(url, {content: markdown, timestamp: Date.now()});
-      
       return markdown;
-    } finally {
-      // Ensure timeout is cleared in all cases
-      clearTimeout(timeoutId);
+    } catch (error) {
+      throw new Error(`Failed to fetch or process page: ${error instanceof Error ? error.message : String(error)}`);
     }
   } catch (error) {
     console.error(`Error fetching doc page: ${error}`);
     return `Error fetching documentation: ${error instanceof Error ? error.message : String(error)}`;
   }
+}
+
+/**
+ * Clear the documentation cache
+ * @returns Promise that resolves when the cache is cleared
+ */
+export async function clearDocCache(): Promise<void> {
+  return fetchService.clearCache(ContentType.WEB_PAGE);
 }

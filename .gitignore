@@ -19,6 +19,7 @@
 # project
 .idea
 build
+cache
 dist
 docs
 coverage
