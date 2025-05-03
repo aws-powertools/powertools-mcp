@@ -3,8 +3,7 @@
  */
 export enum ContentType {
     WEB_PAGE = 'web-page',
-    SEARCH_INDEX = 'search-index',
-    API_DATA = 'api-data'
+    MARKDOWN = 'markdown'
 }
   
 /**

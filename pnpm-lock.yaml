@@ -14,9 +14,15 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.10.1
         version: 1.10.1
+      '@types/cacache':
+        specifier: ^17.0.2
+        version: 17.0.2
       '@types/node':
         specifier: ^22.14.1
         version: 22.14.1
+      cacache:
+        specifier: ^19.0.1
+        version: 19.0.1
       cheerio:
         specifier: ^1.0.0-rc.12
         version: 1.0.0
@@ -827,6 +833,9 @@ packages:
 
   '@types/babel__traverse@7.20.7':
     resolution: {integrity: sha512-dkO5fhS7+/oos4ciWxyEyjWe48zmG6wbCheo/G2ZnHx4fs3EU6YC6UM8rk56gAjNJ9P3MTH2jo5jb92/K6wbng==}
+
+  '@types/cacache@17.0.2':
+    resolution: {integrity: sha512-IrqHzVX2VRMDQQKa7CtKRnuoCLdRJiLW6hWU+w7i7+AaQ0Ii5bKwJxd5uRK4zBCyrHd3tG6G8zOm2LplxbSfQg==}
 
   '@types/estree@1.0.7':
     resolution: {integrity: sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ==}
@@ -4769,6 +4778,10 @@ snapshots:
   '@types/babel__traverse@7.20.7':
     dependencies:
       '@babel/types': 7.27.0
+
+  '@types/cacache@17.0.2':
+    dependencies:
+      '@types/node': 22.14.1
 
   '@types/estree@1.0.7': {}
 

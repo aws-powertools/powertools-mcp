@@ -97,14 +97,14 @@ describe('[FetchService] When making HTTP requests', () => {
       const mockSearchIndexFetch = jest.fn().mockResolvedValue('search-index-response');
       
       mockFetchInstances.set(ContentType.WEB_PAGE, mockWebPageFetch);
-      mockFetchInstances.set(ContentType.SEARCH_INDEX, mockSearchIndexFetch);
+      mockFetchInstances.set(ContentType.MARKDOWN, mockSearchIndexFetch);
       
       // Set the mock fetch instances
       (fetchService as any).fetchInstances = mockFetchInstances;
 
-      await fetchService.fetch('https://example.com/search?q=test');
+      await fetchService.fetch('https://markdown.local/test');
       
-      expect(mockSearchIndexFetch).toHaveBeenCalledWith('https://example.com/search?q=test', expect.objectContaining({
+      expect(mockSearchIndexFetch).toHaveBeenCalledWith('https://markdown.local/test', expect.objectContaining({
         headers: {}
       }));
       expect(mockWebPageFetch).not.toHaveBeenCalled();

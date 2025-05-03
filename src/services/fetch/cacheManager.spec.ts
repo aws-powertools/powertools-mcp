@@ -102,9 +102,8 @@ describe('[CacheManager] When managing cache files', () => {
 
       await cacheManager.clearAllCaches();
 
-      expect(fs.access).toHaveBeenCalledTimes(2);
+      expect(fs.access).toHaveBeenCalledTimes(1);
       expect(fs.access).toHaveBeenCalledWith('/tmp/cache/web-pages');
-      expect(fs.access).toHaveBeenCalledWith('/tmp/cache/search-indexes');
     });
   });
 

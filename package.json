@@ -49,7 +49,9 @@
   "dependencies": {
     "@mixmark-io/domino": "^2.2.0",
     "@modelcontextprotocol/sdk": "^1.10.1",
+    "@types/cacache": "^17.0.2",
     "@types/node": "^22.14.1",
+    "cacache": "^19.0.1",
     "cheerio": "^1.0.0-rc.12",
     "html-to-markdown": "^1.0.0",
     "lunr": "^2.3.9",
