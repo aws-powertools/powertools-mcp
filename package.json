@@ -1,6 +1,6 @@
 {
   "name": "@serverless-dna/powertools-mcp",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Powertools for AWS Lambda Documentation MCP Server",
   "main": "dist/bundle.js",
   "bin": {
