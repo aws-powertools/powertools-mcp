@@ -41,9 +41,10 @@ jest.mock('cacache', () => {
 });
 
 // Get a reference to the mock function AFTER it's created
-const mockFetchService = FetchService as jest.MockedFunction<typeof FetchService>;
-const mockFetch = mockFetchService.mock.results[0].value.fetch;
-const mockClearCache = mockFetchService.mock.results[0].value.clearCache;
+const mockFetchServiceConstructor = FetchService as jest.MockedFunction<any>;
+const mockFetchInstance = mockFetchServiceConstructor.mock.results[0].value;
+const mockFetch = mockFetchInstance.fetch;
+const mockClearCache = mockFetchInstance.clearCache;
 const mockCacacheGet = cacache.get as jest.MockedFunction<typeof cacache.get>;
 const mockCacacheGetInfo = jest.fn();
 (cacache.get as any).info = mockCacacheGetInfo;
@@ -201,7 +202,8 @@ describe('[DocFetcher] When using markdown caching', () => {
     mockCacacheGet.mockResolvedValueOnce({ 
       data: Buffer.from('# Test Page\n\nTest content', 'utf8'),
       metadata: null,
-      integrity: 'sha512-test'
+      integrity: 'sha512-test',
+      size: 28 // Adding the required size property
     });
     
     // Configure the fetch mock
