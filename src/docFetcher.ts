@@ -1,10 +1,14 @@
 // Import domino using dynamic import to avoid TypeScript module issues
+import { createHash } from 'crypto';
+import * as path from 'path';
+
 import cacheConfig from './config/cache';
 import { FetchService } from './services/fetch';
 import { ContentType } from './services/fetch/types';
 
 // @ts-expect-error - Importing domino which doesn't have proper TypeScript definitions
 import domino from '@mixmark-io/domino';
+import * as cacache from 'cacache';
 import TurndownService from 'turndown';
 
 // Allowed domain for security
@@ -102,9 +106,106 @@ function extractContent(html: string): { title: string, content: string } {
 }
 
 /**
+ * Generate a cache key for markdown based on URL and ETag
+ * @param url The URL of the page
+ * @param etag The ETag from the response headers
+ * @returns A cache key string
+ */
+function generateMarkdownCacheKey(url: string, etag: string | null): string {
+  // Clean the ETag (remove quotes if present)
+  const cleanEtag = etag ? etag.replace(/^"(.*)"$/, '$1') : '';
+  
+  // Extract path components from URL for readability
+  const parsedUrl = new URL(url);
+  const pathParts = parsedUrl.pathname.split('/').filter(Boolean);
+  
+  // Create a cache key with path components and ETag
+  // AWS Lambda Powertools documentation URLs follow the pattern:
+  // https://docs.powertools.aws.dev/lambda/{runtime}/{version}/{path}
+  // We check for "lambda" as the first path component to ensure we're processing
+  // a valid Powertools documentation URL with the expected structure
+  if (pathParts.length >= 3 && pathParts[0] === 'lambda') {
+    const runtime = pathParts[1];
+    const version = pathParts[2];
+    const pagePath = pathParts.slice(3).join('/') || 'index';
+    
+    return `${runtime}/${version}/${pagePath}-${cleanEtag}`;
+  }
+  
+  // Fallback for URLs that don't match the expected pattern
+  return `page-${cleanEtag}`;
+}
+
+/**
+ * Generate a hash of HTML content (fallback when ETag is not available)
+ * @param html The HTML content
+ * @returns MD5 hash of the content
+ */
+function generateContentHash(html: string): string {
+  return createHash('md5').update(html).digest('hex');
+}
+
+/**
+ * Get the cache directory path for markdown content
+ * @returns The path to the markdown cache directory
+ */
+function getMarkdownCachePath(): string {
+  return path.join(
+    cacheConfig.basePath,
+    cacheConfig.contentTypes[ContentType.MARKDOWN]?.path || 'markdown-cache'
+  );
+}
+
+/**
+ * Check if markdown exists in cache for a given key
+ * @param cacheKey The cache key
+ * @returns The cached markdown or null if not found
+ */
+async function getMarkdownFromCache(cacheKey: string): Promise<string | null> {
+  try {
+    const cachePath = getMarkdownCachePath();
+    
+    // Use cacache directly to get the content
+    const data = await cacache.get.info(cachePath, cacheKey)
+      .then(() => cacache.get(cachePath, cacheKey))
+      .then(data => data.data.toString('utf8'));
+    
+    console.error(`[CACHE HIT] Markdown cache hit for key: ${cacheKey}`);
+    return data;
+  } catch (error) {
+    // If entry doesn't exist, cacache throws an error
+    if ((error as Error).message.includes('ENOENT') || 
+        (error as Error).message.includes('not found')) {
+      console.error(`[CACHE MISS] No markdown in cache for key: ${cacheKey}`);
+      return null;
+    }
+    
+    console.error(`Error reading markdown from cache: ${error}`);
+    return null;
+  }
+}
+
+/**
+ * Save markdown to cache
+ * @param cacheKey The cache key
+ * @param markdown The markdown content
+ */
+async function saveMarkdownToCache(cacheKey: string, markdown: string): Promise<void> {
+  try {
+    const cachePath = getMarkdownCachePath();
+    
+    // Use cacache directly to store the content
+    await cacache.put(cachePath, cacheKey, markdown);
+    console.error(`[CACHE SAVE] Markdown saved to cache with key: ${cacheKey}`);
+  } catch (error) {
+    console.error(`Error saving markdown to cache: ${error}`);
+  }
+}
+
+/**
  * Fetches a documentation page and converts it to markdown using Turndown
- * Specifically targets the div.md-content[data-md-component="content"] container
  * Uses disk-based caching with ETag validation for efficient fetching
+ * Also caches the converted markdown to avoid redundant conversions
  * 
  * @param url The URL of the documentation page to fetch
  * @returns The page content as markdown
@@ -126,6 +227,9 @@ export async function fetchDocPage(url: string): Promise<string> {
     };
     
     try {
+      // Log that we're fetching the HTML content
+      console.error(`[WEB FETCH] Fetching HTML content from ${url}`);
+      
       // Fetch the HTML content with disk-based caching
       const response = await fetchService.fetch(url, fetchOptions);
       
@@ -133,34 +237,43 @@ export async function fetchDocPage(url: string): Promise<string> {
         throw new Error(`Failed to fetch page: ${response.status} ${response.statusText}`);
       }
       
+      // Check if the response came from cache
+      const fromCache = response.headers.get('x-local-cache') === 'hit';
+      console.error(`[WEB ${fromCache ? 'CACHE HIT' : 'CACHE MISS'}] HTML content ${fromCache ? 'retrieved from cache' : 'fetched from network'} for ${url}`);
+      
+      // Get the ETag from response headers
+      const etag = response.headers.get('etag');
+      
       // Get the HTML content
       const html = await response.text();
       
-      // Extract content from HTML
-      const { title, content } = extractContent(html);
+      // If no ETag, generate a content hash as fallback
+      const cacheKey = etag 
+        ? generateMarkdownCacheKey(url, etag)
+        : generateMarkdownCacheKey(url, generateContentHash(html));
       
-      // Configure Turndown
+      // Check if we have markdown cached for this specific HTML version
+      const cachedMarkdown = await getMarkdownFromCache(cacheKey);
+      if (cachedMarkdown) {
+        console.error(`[CACHE HIT] Markdown found in cache for ${url} with key ${cacheKey}`);
+        return cachedMarkdown;
+      }
+      
+      console.error(`[CACHE MISS] Markdown not found in cache for ${url} with key ${cacheKey}, converting HTML to markdown`);
+      
+      // If not in cache, extract content and convert to markdown
+      const { title, content } = extractContent(html);
       const turndownService = configureTurndown();
       
-      // Convert the HTML to Markdown
+      // Build markdown content
       let markdown = '';
-      
-      // Add title if available
       if (title) {
         markdown = `# ${title}\n\n`;
       }
-      
-      // Convert the main content to Markdown
       markdown += turndownService.turndown(content);
       
-      // If we didn't extract much structured content, fall back to text
-      if (markdown.length < 100) {
-        const doc = domino.createDocument(html);
-        const bodyText = doc.body.textContent?.trim() || '';
-        if (bodyText) {
-          markdown = bodyText;
-        }
-      }
+      // Cache the markdown for future use
+      await saveMarkdownToCache(cacheKey, markdown);
       
       return markdown;
     } catch (error) {
@@ -177,5 +290,14 @@ export async function fetchDocPage(url: string): Promise<string> {
  * @returns Promise that resolves when the cache is cleared
  */
 export async function clearDocCache(): Promise<void> {
-  return fetchService.clearCache(ContentType.WEB_PAGE);
+  await fetchService.clearCache(ContentType.WEB_PAGE);
+  
+  // Clear markdown cache using cacache directly
+  try {
+    const cachePath = getMarkdownCachePath();
+    await cacache.rm.all(cachePath);
+    console.error('Markdown cache cleared');
+  } catch (error) {
+    console.error(`Error clearing markdown cache: ${error}`);
+  }
 }

@@ -105,10 +105,8 @@ export class FetchService {
     if (explicitType) return explicitType;
     
     const urlString = url.toString();
-    if (urlString.includes('/api/index') || urlString.includes('/search')) {
-      return ContentType.SEARCH_INDEX;
-    } else if (urlString.includes('/api/')) {
-      return ContentType.API_DATA;
+    if (urlString.includes('markdown.local')) {
+      return ContentType.MARKDOWN;
     }
     return ContentType.WEB_PAGE;
   }

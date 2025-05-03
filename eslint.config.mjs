@@ -15,7 +15,7 @@ import globals from 'globals';
 export default [
   {
     // Blacklisted Folders, including **/node_modules/ and .git/
-    ignores: ['dist/','build/'],
+    ignores: ['dist/','build/', 'coverage/'],
   },
   {
     // All files

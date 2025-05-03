@@ -37,6 +37,15 @@ export const cacheConfig: CacheConfig = {
       factor: DEFAULT_RETRY_FACTOR,   // Exponential backoff factor
       minTimeout: DEFAULT_MIN_TIMEOUT,
       maxTimeout: DEFAULT_MAX_TIMEOUT
+    },
+    [ContentType.MARKDOWN]: {
+      path: 'markdown-cache',         // Directory for markdown content
+      maxAge: FOURTEEN_DAYS_MS,       // 14-day timeout
+      cacheMode: DEFAULT_CACHE_MODE,  // Standard HTTP cache mode
+      retries: 0,                     // No retries needed for markdown cache
+      factor: DEFAULT_RETRY_FACTOR,
+      minTimeout: DEFAULT_MIN_TIMEOUT,
+      maxTimeout: DEFAULT_MAX_TIMEOUT
     }
   }
 };
