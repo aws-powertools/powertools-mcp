@@ -191,6 +191,7 @@ describe('[DocFetcher] When using markdown caching', () => {
       headers: {
         get: jest.fn().mockImplementation((name) => {
           if (name === 'etag') return '"mock-etag"';
+          if (name === 'x-local-cache-status') return 'hit';
           return null;
         })
       },
@@ -239,6 +240,7 @@ describe('[DocFetcher] When using markdown caching', () => {
       headers: {
         get: jest.fn().mockImplementation((name) => {
           if (name === 'etag') return '"mock-etag-2"';
+          if (name === 'x-local-cache-status') return 'miss';
           return null;
         })
       },
@@ -266,6 +268,54 @@ describe('[DocFetcher] When using markdown caching', () => {
       path.join(cacheConfig.basePath, 'markdown-cache'),
       'python/latest/core/logger-mock-etag-2',
       expect.stringContaining('# Test Page')
+    );
+  });
+  
+  it('should regenerate markdown when HTML cache is missed', async () => {
+    // Setup mock response for HTML fetch with cache miss
+    const mockResponse = {
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      headers: {
+        get: jest.fn().mockImplementation((name) => {
+          if (name === 'etag') return '"mock-etag-3"';
+          if (name === 'x-local-cache-status') return 'miss'; // Explicitly set cache miss
+          return null;
+        })
+      },
+      text: jest.fn().mockResolvedValue('<html><body><div class="md-content" data-md-component="content"><h1>Updated Page</h1><p>Updated content</p></div></body></html>')
+    };
+    
+    // Setup mock for cacache.get.info - even if markdown exists in cache, it should be regenerated on HTML cache miss
+    mockCacacheGetInfo.mockResolvedValueOnce({ integrity: 'sha512-test' });
+    mockCacacheGet.mockResolvedValueOnce({ 
+      data: Buffer.from('# Old Page\n\nOld content', 'utf8'),
+      metadata: null,
+      integrity: 'sha512-test',
+      size: 28
+    });
+    
+    // Configure the fetch mock
+    mockFetch.mockResolvedValueOnce(mockResponse);
+    
+    // Call the function
+    const result = await fetchDocPage('https://docs.powertools.aws.dev/lambda/python/latest/core/logger/');
+    
+    // Verify the result contains the new markdown (not the cached version)
+    expect(result).toContain('# Updated Page');
+    expect(result).toContain('Updated content');
+    expect(result).not.toContain('Old Page');
+    expect(result).not.toContain('Old content');
+    
+    // Verify that the HTML was fetched
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    
+    // Verify that cacache was used to save the new markdown
+    expect(cacache.put).toHaveBeenCalledWith(
+      path.join(cacheConfig.basePath, 'markdown-cache'),
+      'python/latest/core/logger-mock-etag-3',
+      expect.stringContaining('# Updated Page')
     );
   });
 
