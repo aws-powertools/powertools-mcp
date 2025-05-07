@@ -27,7 +27,7 @@ const fetchDocSchema = z.object({
   url: z.string().url(),
 });
 
-const server = new Server(
+export const server = new Server(
   {
     name: "powertools-mcp-server",
     version: "0.6.0",
@@ -77,10 +77,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (!parsed.success) {
           throw new Error(`Invalid arguments for search_docs: ${parsed.error}`);
         }
-        const search = parsed.data.search;
-        const runtime = parsed.data.runtime;
-        const version = parsed.data.version || 'latest';
+        const search = parsed.data.search.trim();
+        const runtime = parsed.data.runtime.trim().toLowerCase();
+        const version = parsed.data.version?.trim().toLowerCase() || 'latest';
 
+      
         // do the search
         const idx = await searchIndexes.getIndex(runtime, version);
         if (!idx) {
