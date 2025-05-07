@@ -238,7 +238,8 @@ export async function fetchDocPage(url: string): Promise<string> {
       }
       
       // Check if the response came from cache
-      const fromCache = response.headers.get('x-local-cache') === 'hit';
+      const fromCache = response.headers.get('x-local-cache-status') === 'hit';
+      // console.error(`[WEB CACHE] Response: `, response.headers)
       console.error(`[WEB ${fromCache ? 'CACHE HIT' : 'CACHE MISS'}] HTML content ${fromCache ? 'retrieved from cache' : 'fetched from network'} for ${url}`);
       
       // Get the ETag from response headers
@@ -252,11 +253,15 @@ export async function fetchDocPage(url: string): Promise<string> {
         ? generateMarkdownCacheKey(url, etag)
         : generateMarkdownCacheKey(url, generateContentHash(html));
       
-      // Check if we have markdown cached for this specific HTML version
-      const cachedMarkdown = await getMarkdownFromCache(cacheKey);
-      if (cachedMarkdown) {
-        console.error(`[CACHE HIT] Markdown found in cache for ${url} with key ${cacheKey}`);
-        return cachedMarkdown;
+      // Only check markdown cache when web page is loaded from Cache
+      // If cache MISS on HTML load then we must re-render the Markdown
+      if (fromCache) {
+        // Check if we have markdown cached for this specific HTML version
+        const cachedMarkdown = await getMarkdownFromCache(cacheKey);
+        if (cachedMarkdown) {
+          console.error(`[CACHE HIT] Markdown found in cache for ${url} with key ${cacheKey}`);
+          return cachedMarkdown;
+        }
       }
       
       console.error(`[CACHE MISS] Markdown not found in cache for ${url} with key ${cacheKey}, converting HTML to markdown`);
