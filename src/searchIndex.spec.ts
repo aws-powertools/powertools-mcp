@@ -350,6 +350,66 @@ describe('[Search-Index] When testing URL construction', () => {
   });
 });
 
+describe('[Search-Index] When limiting search results', () => {
+  it('should limit results to 10 items by default', async () => {
+    const factory = new SearchIndexFactory();
+    const index = await factory.getIndex('python');
+    
+    if (!index?.index || !index?.documents) {
+      throw new Error('Python index not properly loaded');
+    }
+    
+    // Mock the lunr search to return more than 10 results
+    const originalSearch = index.index.search;
+    index.index.search = jest.fn().mockImplementation(() => {
+      // Generate 20 mock results
+      return Array.from({ length: 20 }, (_, i) => ({
+        ref: `doc${i}.html`,
+        score: 100 - i, // Decreasing scores
+        matchData: {}
+      }));
+    });
+    
+    // Perform the search
+    const results = searchDocuments(index.index, index.documents, 'common term');
+    
+    // Verify results are limited to 10
+    expect(results.length).toBe(10);
+    
+    // Restore original search function
+    index.index.search = originalSearch;
+  });
+  
+  it('should allow custom limit values', async () => {
+    const factory = new SearchIndexFactory();
+    const index = await factory.getIndex('python');
+    
+    if (!index?.index || !index?.documents) {
+      throw new Error('Python index not properly loaded');
+    }
+    
+    // Mock the lunr search to return more than 5 results
+    const originalSearch = index.index.search;
+    index.index.search = jest.fn().mockImplementation(() => {
+      // Generate 20 mock results
+      return Array.from({ length: 20 }, (_, i) => ({
+        ref: `doc${i}.html`,
+        score: 100 - i, // Decreasing scores
+        matchData: {}
+      }));
+    });
+    
+    // Perform the search with custom limit of 5
+    const results = searchDocuments(index.index, index.documents, 'common term', 5);
+    
+    // Verify results are limited to 5
+    expect(results.length).toBe(5);
+    
+    // Restore original search function
+    index.index.search = originalSearch;
+  });
+});
+
 // Add a final summary after all tests
 afterAll(() => {
   console.log('\n===== FINAL TEST SUMMARY =====');
