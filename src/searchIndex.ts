@@ -172,15 +172,40 @@ export class SearchIndexFactory {
  * @param index The lunr index to search
  * @param documents The document map for retrieving full documents
  * @param query The search query
- * @returns Array of search results with scores
+ * @param limit Maximum number of results to return (default: 10)
+ * @param scoreThreshold Score threshold below max score (default: 10)
+ * @returns Array of search results with scores, filtered by relevance and limited to the top results
  */
-export function searchDocuments(index: lunr.Index, documents: Map<string, any>, query: string) {
+export function searchDocuments(
+    index: lunr.Index, 
+    documents: Map<string, any>, 
+    query: string, 
+    limit: number = 10,
+    scoreThreshold: number = 10
+) {
     try {
         // Perform the search
         const results = index.search(query);
         
+        if (results.length === 0) {
+            return [];
+        }
+        
+        // Find the maximum score
+        const maxScore = results[0].score;
+        
+        // Filter results to only include those within the threshold of the max score
+        const filteredResults = results.filter(result => {
+            return (maxScore - result.score) <= scoreThreshold;
+        });
+        
+        // Apply limit if there are still too many results
+        const limitedResults = filteredResults.length > limit 
+            ? filteredResults.slice(0, limit) 
+            : filteredResults;
+        
         // Enhance results with document data
-        return results.map(result => {
+        return limitedResults.map(result => {
             const doc = documents.get(result.ref);
             return {
                 ref: result.ref,
