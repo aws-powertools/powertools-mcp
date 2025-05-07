@@ -30,7 +30,7 @@ const fetchDocSchema = z.object({
 const server = new Server(
   {
     name: "powertools-mcp-server",
-    version: "0.1.0",
+    version: "0.6.0",
   },
   {
     capabilities: {
