@@ -4,6 +4,8 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
+import { logger } from '../logger';
+
 import { CacheConfig, CacheStats,ContentType } from './types';
 
 export class CacheManager {
@@ -43,7 +45,7 @@ export class CacheManager {
       await Promise.all(contentFiles.map(file => fs.unlink(file)));
     } catch (error) {
       // Directory doesn't exist or other error
-      console.error(`Error clearing cache for ${contentType}:`, error);
+      logger.info(`Error clearing cache for ${contentType}:`, { error });
     }
   }
 
@@ -101,7 +103,7 @@ export class CacheManager {
           
           return stats;
         } catch (error) {
-          console.error(`Error getting stats for file ${file}:`, error);
+          logger.info(`Error getting stats for file ${file}:`, { error });
           return null;
         }
       });
@@ -116,7 +118,7 @@ export class CacheManager {
       };
     } catch (error) {
       // Directory doesn't exist or other error
-      console.error(`Error getting cache stats for ${contentType}:`, error);
+      logger.info(`Error getting cache stats for ${contentType}:`, { error });
       return {
         size: 0,
         entries: 0,
@@ -157,13 +159,13 @@ export class CacheManager {
             clearedCount++;
           }
         } catch (error) {
-          console.error(`Error checking/removing file ${file}:`, error);
+          logger.info(`Error checking/removing file ${file}:`, { error } );
         }
       }
       
       return clearedCount;
     } catch (error) {
-      console.error(`Error clearing old cache entries for ${contentType}:`, error);
+      logger.info(`Error clearing old cache entries for ${contentType}:`, { error });
       return 0;
     }
   }
@@ -190,7 +192,7 @@ export class CacheManager {
       // Flatten the array of arrays
       return files.flat();
     } catch (error) {
-      console.error(`Error reading directory ${dirPath}:`, error);
+      logger.info(`Error reading directory ${dirPath}:`, { error });
       return [];
     }
   }

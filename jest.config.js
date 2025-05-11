@@ -11,6 +11,15 @@ module.exports = {
     ],
   },
   collectCoverage: true,
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.spec.ts',
+    '!src/**/*.d.ts',
+    '!src/types.d.ts',
+    '!src/**/index.ts',
+  ],
+  coverageReporters: ['text', 'lcov', 'clover', 'json'],
+  coverageDirectory: 'coverage',
   coverageThreshold: {
     global: {
       branches: 25,

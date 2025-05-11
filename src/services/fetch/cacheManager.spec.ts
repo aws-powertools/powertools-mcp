@@ -1,5 +1,7 @@
 import * as fs from 'fs/promises';
 
+import { logger } from '../logger'
+
 import { CacheManager } from './cacheManager';
 import { CacheConfig, ContentType } from './types';
 
@@ -21,7 +23,7 @@ describe('[CacheManager] When managing cache files', () => {
         maxAge: 3600000,
         cacheMode: 'force-cache'
       },
-      [ContentType.SEARCH_INDEX]: {
+      [ContentType.MARKDOWN]: {
         path: 'search-indexes',
         maxAge: 7200000,
         cacheMode: 'default'
@@ -32,13 +34,13 @@ describe('[CacheManager] When managing cache files', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     cacheManager = new CacheManager(mockConfig);
-    console.error = jest.fn();
+    logger.info = jest.fn();
   });
 
   it('should get the correct cache path for a content type', () => {
     // Using private method via any cast for testing
     const webPagePath = (cacheManager as any).getCachePathForContentType(ContentType.WEB_PAGE);
-    const searchIndexPath = (cacheManager as any).getCachePathForContentType(ContentType.SEARCH_INDEX);
+    const searchIndexPath = (cacheManager as any).getCachePathForContentType(ContentType.MARKDOWN);
 
     expect(webPagePath).toBe('/tmp/cache/web-pages');
     expect(searchIndexPath).toBe('/tmp/cache/search-indexes');
@@ -86,9 +88,9 @@ describe('[CacheManager] When managing cache files', () => {
       await cacheManager.clearCache(ContentType.WEB_PAGE);
 
       expect(fs.access).toHaveBeenCalledWith('/tmp/cache/web-pages');
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error clearing cache for web-page'),
-        expect.any(Error)
+      expect(logger.info).toHaveBeenCalledWith(
+        'Error clearing cache for web-page:',
+        { error: expect.any(Error) }
       );
     });
 
@@ -102,7 +104,7 @@ describe('[CacheManager] When managing cache files', () => {
 
       await cacheManager.clearAllCaches();
 
-      expect(fs.access).toHaveBeenCalledTimes(1);
+      expect(fs.access).toHaveBeenCalledTimes(2);
       expect(fs.access).toHaveBeenCalledWith('/tmp/cache/web-pages');
     });
   });
@@ -145,9 +147,9 @@ describe('[CacheManager] When managing cache files', () => {
         oldestEntry: null,
         newestEntry: null
       });
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error getting cache stats for web-page'),
-        expect.any(Error)
+      expect(logger.info).toHaveBeenCalledWith(
+        'Error getting cache stats for web-page:',
+        { error: expect.any(Error) }
       );
     });
   });
@@ -185,8 +187,8 @@ describe('[CacheManager] When managing cache files', () => {
       );
 
       expect(clearedCount).toBe(0);
-      // Just check that console.error was called at least once
-      expect(console.error).toHaveBeenCalled();
+      // Just check that logger.info was called at least once
+      expect(logger.info).toHaveBeenCalled();
     });
   });
 });

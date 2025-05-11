@@ -3,7 +3,7 @@
 # misc
 .DS_Store
 *.log*
-.amazon_q
+.vscode
 
 # dependencies
 **/.yarn/*

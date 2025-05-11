@@ -299,8 +299,7 @@ describe('[Search-Index] When searching with invalid inputs', () => {
     const result = await factory.getIndex('invalid-runtime' as any);
     expect(result).toBeUndefined();
     
-    // Restore console.error
-    (console.error as jest.Mock).mockRestore();
+    // No need to restore logger.info as we're not mocking it anymore
   });
   
   it('should return empty results for searches with no matches', async () => {
