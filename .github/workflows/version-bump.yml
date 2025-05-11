@@ -8,6 +8,10 @@ jobs:
   version-bump:
     name: Version Bump
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     if: "!contains(github.event.head_commit.message, 'skip ci') && !contains(github.event.head_commit.message, 'chore(release)')"
     
     steps:

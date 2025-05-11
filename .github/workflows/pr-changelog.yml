@@ -9,6 +9,9 @@ jobs:
   validate-pr:
     name: Validate PR Description
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
     
     steps:
       - name: Check PR Description
