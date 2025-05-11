@@ -94,8 +94,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         
         // Use the searchDocuments function to get enhanced results
+        logger.info(`Searching for "${search}" in ${runtime} ${version}`);
         const results = searchDocuments(idx.index, idx.documents, search);
-        logger.debug(`Search results for "${search}" in ${runtime}`, { results: results.length });
+        logger.info(`Search results for "${search}" in ${runtime}`, { results: results.length });
         
         // Format results for better readability
         const formattedResults = results.map(result => {
@@ -156,11 +157,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 async function main() {
     const transport = new StdioServerTransport();
+    logger.info('starting Powertools MCP Server')
     await server.connect(transport);
+    console.error('Powertools Documentation MCP Server running on stdio');
     logger.info('Powertools Documentation MCP Server running on stdio');
 }
 
 main().catch((error) => {
+    console.error("Fatal error in main()", { error });
     logger.error("Fatal error in main()", { error });
     process.exit(1);
 });

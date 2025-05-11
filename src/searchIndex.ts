@@ -2,6 +2,7 @@ import cacheConfig from './config/cache';
 import { FetchService } from './services/fetch';
 import { ContentType } from './services/fetch/types';
 import { logger } from './services/logger';
+
 import lunr from 'lunr';
 
 // Define the structure of MkDocs search index

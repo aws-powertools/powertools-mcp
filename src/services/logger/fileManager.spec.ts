@@ -19,8 +19,8 @@ jest.mock('fs', () => ({
   createWriteStream: jest.fn(),
 }));
 
-// Mock logger.info
-logger.info = jest.fn();
+// Mock console.error
+console.error = jest.fn();
 
 describe('[Logger] When managing log files', () => {
   let fileManager: LogFileManager;
@@ -46,9 +46,6 @@ describe('[Logger] When managing log files', () => {
       if (match) {
         const [, year, month, day] = match;
         const fileDate = new Date(`${year}-${month}-${day}T00:00:00Z`);
-        // We don't need to use daysDiff in the mock implementation
-        // const now = new Date('2025-05-11T00:00:00Z');
-        // const daysDiff = Math.floor((now.getTime() - fileDate.getTime()) / (1000 * 60 * 60 * 24));
         
         return Promise.resolve({
           isFile: () => true,
@@ -99,41 +96,21 @@ describe('[Logger] When managing log files', () => {
     expect(fs.promises.mkdir).not.toHaveBeenCalled();
   });
   
-  it('should generate correct log filename with sequence number', async () => {
-    // Mock existing log files for today
-    const today = '2025-05-11';
-    (fs.promises.readdir as jest.Mock).mockResolvedValue([
-      `${today}-001.log`,
-      `${today}-002.log`,
-    ]);
-    
+  it('should generate correct log filename with date format', async () => {
     const logPath = await fileManager.getLogFilePath();
     
-    expect(logPath).toContain(`${today}-003.log`);
+    expect(logPath).toContain('2025-05-11.log');
   });
   
-  it('should start with sequence 001 when no logs exist for today', async () => {
-    // Mock no existing log files for today
-    (fs.promises.readdir as jest.Mock).mockResolvedValue([
-      '2025-05-10-001.log',
-      '2025-05-09-001.log',
-    ]);
-    
-    const logPath = await fileManager.getLogFilePath();
-    
-    expect(logPath).toContain('2025-05-11-001.log');
-  });
-  
-  // Skip the problematic tests for now
   it.skip('should clean up log files older than 7 days', async () => {
     // Mock log files with various dates
     const files = [
-      '2025-05-11-001.log',  // today
-      '2025-05-10-001.log',  // 1 day old
-      '2025-05-05-001.log',  // 6 days old
-      '2025-05-04-001.log',  // 7 days old
-      '2025-05-03-001.log',  // 8 days old - should be deleted
-      '2025-04-30-001.log',  // 11 days old - should be deleted
+      '2025-05-11.log',  // today
+      '2025-05-10.log',  // 1 day old
+      '2025-05-05.log',  // 6 days old
+      '2025-05-04.log',  // 7 days old
+      '2025-05-03.log',  // 8 days old - should be deleted
+      '2025-04-30.log',  // 11 days old - should be deleted
     ];
     
     (fs.promises.readdir as jest.Mock).mockResolvedValue(files);
@@ -166,7 +143,7 @@ describe('[Logger] When managing log files', () => {
     // Mock the unlink function to simulate deletion
     (fs.promises.unlink as jest.Mock).mockImplementation((filePath) => {
       const fileName = path.basename(filePath);
-      if (fileName === '2025-05-03-001.log' || fileName === '2025-04-30-001.log') {
+      if (fileName === '2025-05-03.log' || fileName === '2025-04-30.log') {
         return Promise.resolve();
       }
       return Promise.reject(new Error('File not found'));
@@ -176,15 +153,15 @@ describe('[Logger] When managing log files', () => {
     
     // Check that old files were deleted
     expect(fs.promises.unlink).toHaveBeenCalledTimes(2);
-    expect(fs.promises.unlink).toHaveBeenCalledWith(path.join(logDir, '2025-05-03-001.log'));
-    expect(fs.promises.unlink).toHaveBeenCalledWith(path.join(logDir, '2025-04-30-001.log'));
+    expect(fs.promises.unlink).toHaveBeenCalledWith(path.join(logDir, '2025-05-03.log'));
+    expect(fs.promises.unlink).toHaveBeenCalledWith(path.join(logDir, '2025-04-30.log'));
   });
   
   it.skip('should create a new log file when current date changes', async () => {
     // Setup initial log file
     (fs.promises.readdir as jest.Mock).mockResolvedValue([]);
     const initialLogPath = await fileManager.getLogFilePath();
-    expect(initialLogPath).toContain('2025-05-11-001.log');
+    expect(initialLogPath).toContain('2025-05-11.log');
     
     // Change date to next day
     const nextDay = new Date('2025-05-12T00:00:00Z');
@@ -199,6 +176,6 @@ describe('[Logger] When managing log files', () => {
     
     // Should create a new log file for the new day
     const newLogPath = await fileManager.getLogFilePath();
-    expect(newLogPath).toContain('2025-05-12-001.log');
+    expect(newLogPath).toContain('2025-05-12.log');
   });
 });

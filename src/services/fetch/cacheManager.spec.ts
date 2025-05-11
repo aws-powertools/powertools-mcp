@@ -1,5 +1,7 @@
 import * as fs from 'fs/promises';
 
+import { logger } from '../logger'
+
 import { CacheManager } from './cacheManager';
 import { CacheConfig, ContentType } from './types';
 
@@ -21,7 +23,7 @@ describe('[CacheManager] When managing cache files', () => {
         maxAge: 3600000,
         cacheMode: 'force-cache'
       },
-      [ContentType.SEARCH_INDEX]: {
+      [ContentType.MARKDOWN]: {
         path: 'search-indexes',
         maxAge: 7200000,
         cacheMode: 'default'
@@ -38,7 +40,7 @@ describe('[CacheManager] When managing cache files', () => {
   it('should get the correct cache path for a content type', () => {
     // Using private method via any cast for testing
     const webPagePath = (cacheManager as any).getCachePathForContentType(ContentType.WEB_PAGE);
-    const searchIndexPath = (cacheManager as any).getCachePathForContentType(ContentType.SEARCH_INDEX);
+    const searchIndexPath = (cacheManager as any).getCachePathForContentType(ContentType.MARKDOWN);
 
     expect(webPagePath).toBe('/tmp/cache/web-pages');
     expect(searchIndexPath).toBe('/tmp/cache/search-indexes');
@@ -87,8 +89,8 @@ describe('[CacheManager] When managing cache files', () => {
 
       expect(fs.access).toHaveBeenCalledWith('/tmp/cache/web-pages');
       expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Error clearing cache for web-page'),
-        expect.any(Error)
+        'Error clearing cache for web-page:',
+        { error: expect.any(Error) }
       );
     });
 
@@ -102,7 +104,7 @@ describe('[CacheManager] When managing cache files', () => {
 
       await cacheManager.clearAllCaches();
 
-      expect(fs.access).toHaveBeenCalledTimes(1);
+      expect(fs.access).toHaveBeenCalledTimes(2);
       expect(fs.access).toHaveBeenCalledWith('/tmp/cache/web-pages');
     });
   });
@@ -146,8 +148,8 @@ describe('[CacheManager] When managing cache files', () => {
         newestEntry: null
       });
       expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Error getting cache stats for web-page'),
-        expect.any(Error)
+        'Error getting cache stats for web-page:',
+        { error: expect.any(Error) }
       );
     });
   });

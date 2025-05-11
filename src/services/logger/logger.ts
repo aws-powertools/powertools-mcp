@@ -20,6 +20,20 @@ export class Logger {
     this.fileManager = new LogFileManager();
   }
 
+  protected renewPinoLogger(logPath: string): pino.Logger {
+    const fileTransport = pino.transport({
+      target: 'pino/file',
+      options: { destination: logPath }
+    });
+
+    return pino({
+          level: process.env.LOG_LEVEL || 'info',
+          timestamp: () => `,"time":"${new Date().toISOString()}"`,
+        }, 
+        fileTransport,
+      );
+  }
+
   /**
    * Get the singleton instance of the logger
    */
@@ -47,10 +61,7 @@ export class Logger {
     await this.fileManager.initialize();
     this.currentLogPath = await this.fileManager.getLogFilePath();
     
-    this.logger = pino({
-      level: process.env.LOG_LEVEL || 'info',
-      timestamp: () => `,"time":"${new Date().toISOString()}"`,
-    }, pino.destination(this.currentLogPath));
+    this.logger = this.renewPinoLogger(this.currentLogPath);
     
     this.initialized = true;
   }
@@ -98,13 +109,7 @@ export class Logger {
       this.currentLogPath = logPath;
       
       // Create a new logger instance with the new file
-      this.logger = pino({
-        transport: {
-          target: 'pino-pretty',
-        },
-        level: process.env.LOG_LEVEL || 'info',
-        timestamp: () => `,"time":"${new Date().toISOString()}"`,
-      }, pino.destination(this.currentLogPath));
+      this.logger = this.renewPinoLogger(this.currentLogPath)
     }
   }
 

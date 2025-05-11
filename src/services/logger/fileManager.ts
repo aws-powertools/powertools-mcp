@@ -1,11 +1,11 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { logger } from '../logger'
+
 /**
  * Manages log files for the Powertools MCP logger
  * - Creates log files in $HOME/.powertools/logs/
- * - Names files with pattern: YYYY-MM-DD-NNN.log (where NNN is a sequence number)
+ * - Names files with pattern: YYYY-MM-DD.log
  * - Handles daily log rotation
  * - Cleans up log files older than 7 days
  */
@@ -68,35 +68,20 @@ export class LogFileManager {
           await fs.promises.unlink(filePath);
         }
       }
-    } catch (_err) {
+    } catch {
       // Silently fail if cleanup fails - we don't want to break logging
-      logger.info('Failed to clean up old log files', { error: _err as Error });
+      console.error('Failed to clean up old log files');
     }
   }
 
   /**
-   * Create a new log file with the next sequence number for today
+   * Create a new log file for today
    */
   private async createNewLogFile(): Promise<string> {
     await this.ensureLogDirectoryExists();
     
-    // Get existing log files for today to determine sequence number
-    const files = await fs.promises.readdir(this.logDir);
-    const todayFiles = files.filter(file => file.startsWith(this.currentDate));
-    
-    // Find the highest sequence number
-    let maxSequence = 0;
-    for (const file of todayFiles) {
-      const match = file.match(/-(\d{3})\.log$/);
-      if (match) {
-        const sequence = parseInt(match[1], 10);
-        maxSequence = Math.max(maxSequence, sequence);
-      }
-    }
-    
-    // Create new file with next sequence number
-    const nextSequence = (maxSequence + 1).toString().padStart(3, '0');
-    const fileName = `${this.currentDate}-${nextSequence}.log`;
+    // Create file with today's date
+    const fileName = `${this.currentDate}.log`;
     const filePath = path.join(this.logDir, fileName);
     
     return filePath;
