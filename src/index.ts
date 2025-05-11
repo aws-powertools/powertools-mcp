@@ -1,5 +1,6 @@
-import { fetchDocPage } from "./docFetcher.js";
-import { searchDocuments,SearchIndexFactory } from "./searchIndex.js";
+import { logger } from "./services/logger/index";
+import { fetchDocPage } from "./docFetcher";
+import { searchDocuments,SearchIndexFactory } from "./searchIndex";
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -70,6 +71,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     const { name, arguments: args } = request.params;
+    logger.info(`Tool request: ${name}`, { tool: name, args });
 
     switch(name) {
       case "search_docs": {
@@ -93,7 +95,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         
         // Use the searchDocuments function to get enhanced results
         const results = searchDocuments(idx.index, idx.documents, search);
-        // error('results returned', results);
+        logger.debug(`Search results for "${search}" in ${runtime}`, { results: results.length });
         
         // Format results for better readability
         const formattedResults = results.map(result => {
@@ -127,7 +129,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const url = parsed.data.url;
         
         // Fetch the documentation page
+        logger.info(`Fetching documentation page`, { url });
         const markdown = await fetchDocPage(url);
+        logger.debug(`Fetched documentation page`, { contentLength: markdown.length });
         
         return {
           content: [{ type: "text", text: markdown }]
@@ -136,10 +140,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       // default error case - tool not known
       default:
+        logger.warn(`Unknown tool requested`, { tool: name });
         throw new Error(`Unknown tool: ${name}`);
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
+    const theError = error instanceof Error ? error : new Error(errorMessage)
+    logger.error(`Error handling tool request`, { error: theError });
     return {
       content: [{ type: "text", text: `Error: ${errorMessage}` }],
       isError: true,
@@ -150,10 +157,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("Powertools Documentation MCP Server running on stdio");
+    logger.info('Powertools Documentation MCP Server running on stdio');
 }
 
 main().catch((error) => {
-    console.error("Fatal error in main():", error);
+    logger.error("Fatal error in main()", { error });
     process.exit(1);
 });

@@ -32,7 +32,7 @@ describe('[CacheManager] When managing cache files', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     cacheManager = new CacheManager(mockConfig);
-    console.error = jest.fn();
+    logger.info = jest.fn();
   });
 
   it('should get the correct cache path for a content type', () => {
@@ -86,7 +86,7 @@ describe('[CacheManager] When managing cache files', () => {
       await cacheManager.clearCache(ContentType.WEB_PAGE);
 
       expect(fs.access).toHaveBeenCalledWith('/tmp/cache/web-pages');
-      expect(console.error).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining('Error clearing cache for web-page'),
         expect.any(Error)
       );
@@ -145,7 +145,7 @@ describe('[CacheManager] When managing cache files', () => {
         oldestEntry: null,
         newestEntry: null
       });
-      expect(console.error).toHaveBeenCalledWith(
+      expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining('Error getting cache stats for web-page'),
         expect.any(Error)
       );
@@ -185,8 +185,8 @@ describe('[CacheManager] When managing cache files', () => {
       );
 
       expect(clearedCount).toBe(0);
-      // Just check that console.error was called at least once
-      expect(console.error).toHaveBeenCalled();
+      // Just check that logger.info was called at least once
+      expect(logger.info).toHaveBeenCalled();
     });
   });
 });

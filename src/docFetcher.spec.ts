@@ -69,7 +69,7 @@ async function measureExecutionTime<T>(fn: () => Promise<T>): Promise<{ result: 
   };
 }
 
-// Mock console.error to avoid cluttering test output
+// Mock logger.info to avoid cluttering test output
 beforeEach(() => {
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });

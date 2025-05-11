@@ -5,6 +5,7 @@ import * as path from 'path';
 import cacheConfig from './config/cache';
 import { FetchService } from './services/fetch';
 import { ContentType } from './services/fetch/types';
+import { logger } from './services/logger';
 
 // @ts-expect-error - Importing domino which doesn't have proper TypeScript definitions
 import domino from '@mixmark-io/domino';
@@ -170,17 +171,17 @@ async function getMarkdownFromCache(cacheKey: string): Promise<string | null> {
       .then(() => cacache.get(cachePath, cacheKey))
       .then(data => data.data.toString('utf8'));
     
-    console.error(`[CACHE HIT] Markdown cache hit for key: ${cacheKey}`);
+    logger.info(`[CACHE HIT] Markdown cache hit for key: ${cacheKey}`);
     return data;
   } catch (error) {
     // If entry doesn't exist, cacache throws an error
     if ((error as Error).message.includes('ENOENT') || 
         (error as Error).message.includes('not found')) {
-      console.error(`[CACHE MISS] No markdown in cache for key: ${cacheKey}`);
+      logger.info(`[CACHE MISS] No markdown in cache for key: ${cacheKey}`);
       return null;
     }
     
-    console.error(`Error reading markdown from cache: ${error}`);
+    logger.info(`Error reading markdown from cache: ${error}`);
     return null;
   }
 }
@@ -196,9 +197,9 @@ async function saveMarkdownToCache(cacheKey: string, markdown: string): Promise<
     
     // Use cacache directly to store the content
     await cacache.put(cachePath, cacheKey, markdown);
-    console.error(`[CACHE SAVE] Markdown saved to cache with key: ${cacheKey}`);
+    logger.info(`[CACHE SAVE] Markdown saved to cache with key: ${cacheKey}`);
   } catch (error) {
-    console.error(`Error saving markdown to cache: ${error}`);
+    logger.info(`Error saving markdown to cache: ${error}`);
   }
 }
 
@@ -228,7 +229,7 @@ export async function fetchDocPage(url: string): Promise<string> {
     
     try {
       // Log that we're fetching the HTML content
-      console.error(`[WEB FETCH] Fetching HTML content from ${url}`);
+      logger.info(`[WEB FETCH] Fetching HTML content from ${url}`);
       
       // Fetch the HTML content with disk-based caching
       const response = await fetchService.fetch(url, fetchOptions);
@@ -239,8 +240,8 @@ export async function fetchDocPage(url: string): Promise<string> {
       
       // Check if the response came from cache
       const fromCache = response.headers.get('x-local-cache-status') === 'hit';
-      // console.error(`[WEB CACHE] Response: `, response.headers)
-      console.error(`[WEB ${fromCache ? 'CACHE HIT' : 'CACHE MISS'}] HTML content ${fromCache ? 'retrieved from cache' : 'fetched from network'} for ${url}`);
+      // logger.info(`[WEB CACHE] Response: `, response.headers)
+      logger.info(`[WEB ${fromCache ? 'CACHE HIT' : 'CACHE MISS'}] HTML content ${fromCache ? 'retrieved from cache' : 'fetched from network'} for ${url}`);
       
       // Get the ETag from response headers
       const etag = response.headers.get('etag');
@@ -259,12 +260,12 @@ export async function fetchDocPage(url: string): Promise<string> {
         // Check if we have markdown cached for this specific HTML version
         const cachedMarkdown = await getMarkdownFromCache(cacheKey);
         if (cachedMarkdown) {
-          console.error(`[CACHE HIT] Markdown found in cache for ${url} with key ${cacheKey}`);
+          logger.info(`[CACHE HIT] Markdown found in cache for ${url} with key ${cacheKey}`);
           return cachedMarkdown;
         }
       }
       
-      console.error(`[CACHE MISS] Markdown not found in cache for ${url} with key ${cacheKey}, converting HTML to markdown`);
+      logger.info(`[CACHE MISS] Markdown not found in cache for ${url} with key ${cacheKey}, converting HTML to markdown`);
       
       // If not in cache, extract content and convert to markdown
       const { title, content } = extractContent(html);
@@ -285,7 +286,7 @@ export async function fetchDocPage(url: string): Promise<string> {
       throw new Error(`Failed to fetch or process page: ${error instanceof Error ? error.message : String(error)}`);
     }
   } catch (error) {
-    console.error(`Error fetching doc page: ${error}`);
+    logger.info(`Error fetching doc page: ${error}`);
     return `Error fetching documentation: ${error instanceof Error ? error.message : String(error)}`;
   }
 }
@@ -301,8 +302,8 @@ export async function clearDocCache(): Promise<void> {
   try {
     const cachePath = getMarkdownCachePath();
     await cacache.rm.all(cachePath);
-    console.error('Markdown cache cleared');
+    logger.info('Markdown cache cleared');
   } catch (error) {
-    console.error(`Error clearing markdown cache: ${error}`);
+    logger.info(`Error clearing markdown cache: ${error}`);
   }
 }

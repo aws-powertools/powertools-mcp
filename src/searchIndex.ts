@@ -1,7 +1,7 @@
 import cacheConfig from './config/cache';
 import { FetchService } from './services/fetch';
 import { ContentType } from './services/fetch/types';
-
+import { logger } from './services/logger';
 import lunr from 'lunr';
 
 // Define the structure of MkDocs search index
@@ -54,7 +54,7 @@ async function fetchSearchIndex(runtime: string, version = 'latest'): Promise<Mk
         const indexData = await response.json();
         return indexData as MkDocsSearchIndex;
     } catch (error) {
-        console.error(`Error fetching search index for ${runtime}: ${error}`);
+        logger.info(`Error fetching search index for ${runtime}: ${error}`);
         return undefined;
     }
 }
@@ -161,7 +161,7 @@ export class SearchIndexFactory {
             
             return searchIndex;
         } catch (error) {
-            console.error(`Error loading search index [${runtime}]: ${error}`);
+            logger.info(`Error loading search index [${runtime}]: ${error}`);
             return undefined;
         }
     }
@@ -218,7 +218,7 @@ export function searchDocuments(
             };
         });
     } catch (error) {
-        console.error(`Search error: ${error}`);
+        logger.info(`Search error: ${error}`);
         return [];
     }
 }
