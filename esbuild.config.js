@@ -16,7 +16,7 @@ async function runBuild() {
       },
       plugins: [
         esbuildPluginPino({
-          transports: ['pino-pretty'] // Adding pino-pretty as it's used in the logger
+          transports: [] // No transports needed, we're using direct file output
         }),
       ],
       // We're bundling everything for a standalone executable

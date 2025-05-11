@@ -1,4 +1,5 @@
 import { LogFileManager } from './fileManager';
+import { createFormattedFileStream } from './formatter';
 
 import pino from 'pino';
 
@@ -12,6 +13,8 @@ export class Logger {
   private logger: pino.Logger | null = null;
   private initialized = false;
   private currentLogPath: string | null = null;
+  private lastCheckTime = 0;
+  private checkIntervalMs = 5 * 60 * 1000; // 5 minutes
 
   /**
    * Private constructor to enforce singleton pattern
@@ -21,17 +24,13 @@ export class Logger {
   }
 
   protected renewPinoLogger(logPath: string): pino.Logger {
-    const fileTransport = pino.transport({
-      target: 'pino/file',
-      options: { destination: logPath }
-    });
-
+    // Create a custom formatted stream instead of using pino/file transport
+    const formattedStream = createFormattedFileStream(logPath);
+    
     return pino({
-          level: process.env.LOG_LEVEL || 'info',
-          timestamp: () => `,"time":"${new Date().toISOString()}"`,
-        }, 
-        fileTransport,
-      );
+      level: process.env.LOG_LEVEL || 'info',
+      timestamp: () => `,"time":"${new Date().toISOString()}"`,
+    }, formattedStream);
   }
 
   /**
@@ -62,6 +61,9 @@ export class Logger {
     this.currentLogPath = await this.fileManager.getLogFilePath();
     
     this.logger = this.renewPinoLogger(this.currentLogPath);
+    
+    // Set the initial check time
+    this.lastCheckTime = Date.now();
     
     this.initialized = true;
   }
@@ -94,13 +96,22 @@ export class Logger {
 
   /**
    * Check if the log file needs to be rotated
-   * This should be called before each log operation
+   * This is now called periodically rather than before each log operation
    */
   private async checkLogRotation(): Promise<void> {
     if (!this.initialized) {
       await this.initialize();
       return;
     }
+    
+    const now = Date.now();
+    // Only check for rotation if the check interval has passed
+    if (now - this.lastCheckTime < this.checkIntervalMs) {
+      return;
+    }
+    
+    // Update the last check time
+    this.lastCheckTime = now;
     
     const logPath = await this.fileManager.getLogFilePath();
     
