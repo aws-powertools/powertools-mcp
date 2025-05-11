@@ -29,10 +29,11 @@
     "postbuild": "chmod +x dist/index.js",
     "test": "jest",
     "lint": "eslint --config eslint.config.mjs",
-    "test:ci": "jest --ci",
+    "test:ci": "jest --ci --coverage",
     "lint:fix": "eslint --fix --config eslint.config.mjs",
     "postversion": "pnpm build",
     "release": "semantic-release",
+    "release:dry-run": "semantic-release --dry-run",
     "mcp:local": "pnpm build && npx -y @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
@@ -68,6 +69,7 @@
     "@eslint/js": "^9.25.0",
     "@jest/globals": "^29.7.0",
     "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.1",
     "@types/jest": "^29.5.14",
     "@types/lunr": "^2.3.7",
