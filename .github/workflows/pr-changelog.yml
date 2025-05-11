@@ -1,0 +1,73 @@
+name: PR Changelog
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+    branches: [ main ]
+
+jobs:
+  validate-pr:
+    name: Validate PR Description
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check PR Description
+        id: check-pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+            
+            // Check if PR has a changelog section
+            const hasChangelog = body.includes('## Changelog') || 
+                                body.includes('## Changes') || 
+                                body.includes('## What Changed');
+            
+            if (!hasChangelog) {
+              core.setFailed('PR description should include a changelog section (## Changelog, ## Changes, or ## What Changed)');
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: '⚠️ Please add a changelog section to your PR description. This will be used in release notes.\n\nAdd one of these sections:\n- `## Changelog`\n- `## Changes`\n- `## What Changed`\n\nAnd describe the changes in a user-friendly way.'
+              });
+              return;
+            }
+            
+            core.info('PR has a valid changelog section');
+            
+      - name: Add Label
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            
+            // Determine PR type based on title or labels
+            let prType = 'other';
+            const title = pr.title.toLowerCase();
+            
+            if (title.startsWith('fix:') || title.includes('bug') || title.includes('fix')) {
+              prType = 'fix';
+            } else if (title.startsWith('feat:') || title.includes('feature')) {
+              prType = 'feature';
+            } else if (title.includes('breaking') || title.includes('!:')) {
+              prType = 'breaking';
+            } else if (title.startsWith('docs:') || title.includes('documentation')) {
+              prType = 'docs';
+            } else if (title.startsWith('chore:') || title.includes('chore')) {
+              prType = 'chore';
+            }
+            
+            // Add appropriate label
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: [`type: ${prType}`]
+              });
+            } catch (error) {
+              core.warning(`Failed to add label: ${error.message}`);
+            }

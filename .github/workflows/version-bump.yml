@@ -1,0 +1,143 @@
+name: Version Bump
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  version-bump:
+    name: Version Bump
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'skip ci') && !contains(github.event.head_commit.message, 'chore(release)')"
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.8.0
+          
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+          
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+            
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Lint
+        run: pnpm lint
+        
+      - name: Build
+        run: pnpm build
+        
+      - name: Test
+        run: pnpm test:ci
+        
+      - name: Test Release (Dry Run)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+        run: pnpm release:dry-run
+        
+      - name: Update or Create GitHub Release Draft
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the next version from semantic-release
+          VERSION=$(npx semantic-release --dry-run | grep -oP 'The next release version is \K[0-9]+\.[0-9]+\.[0-9]+' || echo "")
+          
+          if [ -z "$VERSION" ]; then
+            echo "No version change detected, skipping release creation"
+            exit 0
+          fi
+          
+          echo "Next version will be: $VERSION"
+          
+          # Update package.json version
+          npm version $VERSION --no-git-tag-version
+          
+          # Generate changelog for this version
+          npx semantic-release --dry-run --no-ci > release-notes.md
+          
+          # Extract just the release notes section
+          sed -n '/# \[/,/^$/p' release-notes.md > changelog-extract.md
+          
+          # Get PR information
+          PR_NUMBER=$(echo "${{ github.event.head_commit.message }}" | grep -oP '#\K[0-9]+' || echo "")
+          PR_TITLE=""
+          PR_BODY=""
+          
+          if [ ! -z "$PR_NUMBER" ]; then
+            PR_INFO=$(gh pr view $PR_NUMBER --json title,body || echo "{}")
+            PR_TITLE=$(echo "$PR_INFO" | jq -r '.title // ""')
+            PR_BODY=$(echo "$PR_INFO" | jq -r '.body // ""')
+          fi
+          
+          # Check if draft release already exists
+          RELEASE_EXISTS=$(gh release view v$VERSION --json isDraft 2>/dev/null || echo "{}")
+          IS_DRAFT=$(echo "$RELEASE_EXISTS" | jq -r '.isDraft // false')
+          
+          if [ "$IS_DRAFT" = "true" ]; then
+            echo "Updating existing draft release v$VERSION"
+            
+            # Get existing release notes
+            gh release view v$VERSION --json body | jq -r '.body' > existing-notes.md
+            
+            # Add new PR information if available
+            if [ ! -z "$PR_NUMBER" ] && [ ! -z "$PR_TITLE" ]; then
+              echo -e "\n### PR #$PR_NUMBER: $PR_TITLE\n" >> existing-notes.md
+              if [ ! -z "$PR_BODY" ]; then
+                echo -e "$PR_BODY\n" >> existing-notes.md
+              fi
+            fi
+            
+            # Update the release
+            gh release edit v$VERSION --notes-file existing-notes.md
+          else
+            echo "Creating new draft release v$VERSION"
+            
+            # Create initial release notes
+            echo -e "# Release v$VERSION\n" > release-notes.md
+            cat changelog-extract.md >> release-notes.md
+            
+            # Add PR information if available
+            if [ ! -z "$PR_NUMBER" ] && [ ! -z "$PR_TITLE" ]; then
+              echo -e "\n## Pull Requests\n" >> release-notes.md
+              echo -e "### PR #$PR_NUMBER: $PR_TITLE\n" >> release-notes.md
+              if [ ! -z "$PR_BODY" ]; then
+                echo -e "$PR_BODY\n" >> release-notes.md
+              fi
+            fi
+            
+            # Create a draft release
+            gh release create v$VERSION \
+              --draft \
+              --title "v$VERSION" \
+              --notes-file release-notes.md
+          fi
+          
+          # Commit the version change
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add package.json
+          git commit -m "chore(release): bump version to $VERSION [skip ci]"
+          git push
