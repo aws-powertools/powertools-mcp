@@ -1,5 +1,4 @@
-import cacheConfig from './config/cache';
-import { FetchService } from './services/fetch';
+import { fetchService } from './services/fetch';
 import { ContentType } from './services/fetch/types';
 import { logger } from './services/logger';
 
@@ -20,11 +19,30 @@ interface MkDocsSearchIndex {
     }>;
 }
 
-// Initialize the fetch service with disk-based caching
-const fetchService = new FetchService(cacheConfig);
-
 // Base URL for Powertools documentation
 const POWERTOOLS_BASE_URL = 'https://docs.powertools.aws.dev/lambda';
+
+// Function to fetch available versions for a runtime
+async function fetchAvailableVersions(runtime: string): Promise<Array<{title: string, version: string, aliases: string[]}> | undefined> {
+    try {
+        const url = `${POWERTOOLS_BASE_URL}/${runtime}/versions.json`;
+        const response = await fetchService.fetch(url, {
+            contentType: ContentType.WEB_PAGE,
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            return undefined;
+        }
+        
+        return await response.json();
+    } catch (error) {
+        logger.info(`Error fetching versions for ${runtime}: ${error}`);
+        return undefined;
+    }
+}
 
 // Function to get the search index URL for a runtime
 function getSearchIndexUrl(runtime: string, version = 'latest'): string {
@@ -125,15 +143,64 @@ export class SearchIndexFactory {
         return `${runtime}-${version}`;
     }
 
+    // Resolve version (handle aliases like "latest")
+    async resolveVersion(runtime: string, requestedVersion: string): Promise<{resolved: string, available: Array<{title: string, version: string, aliases: string[]}> | undefined, valid: boolean}> {
+        // For Java and .NET that don't use versions yet, return "latest"
+        if (runtime !== 'python' && runtime !== 'typescript') {
+            return { resolved: 'latest', available: undefined, valid: true };
+        }
+        
+        const versions = await fetchAvailableVersions(runtime);
+        
+        // If no versions found, return requested version
+        if (!versions || versions.length === 0) {
+            return { resolved: requestedVersion, available: versions, valid: false };
+        }
+        
+        // If requested version is an alias, resolve it
+        if (requestedVersion === 'latest') {
+            // Find version with "latest" alias
+            const latestVersion = versions.find(v => v.aliases.includes('latest'));
+            return { 
+                resolved: latestVersion ? latestVersion.version : versions[0].version, 
+                available: versions,
+                valid: true
+            };
+        }
+        
+        // Check if requested version exists
+        const versionExists = versions.some(v => v.version === requestedVersion);
+        if (versionExists) {
+            return { resolved: requestedVersion, available: versions, valid: true };
+        }
+        
+        // Return information about invalid version
+        logger.info(`Version ${requestedVersion} not found for ${runtime}`);
+        return { 
+            resolved: requestedVersion, 
+            available: versions,
+            valid: false
+        };
+    }
+
     async getIndex(runtime: string, version = 'latest'): Promise<SearchIndex | undefined> {
-        const cacheKey = this.getCacheKey(runtime, version);
+        // Resolve version first
+        const versionInfo = await this.resolveVersion(runtime, version);
+        
+        // If version is invalid, return undefined
+        if (!versionInfo.valid) {
+            return undefined;
+        }
+        
+        const resolvedVersion = versionInfo.resolved;
+        const cacheKey = this.getCacheKey(runtime, resolvedVersion);
 
         if (this.indices.has(cacheKey)) {
             return this.indices.get(cacheKey);
         }
 
         // Load the cache key and return the index result
-        return await this.loadIndexData(runtime, version);
+        return await this.loadIndexData(runtime, resolvedVersion);
     }
 
     protected async loadIndexData(runtime: string, version = 'latest'): Promise<SearchIndex | undefined> {
@@ -142,7 +209,9 @@ export class SearchIndexFactory {
             const mkDocsIndex = await fetchSearchIndex(runtime, version);
             
             if (!mkDocsIndex) {
-                throw new Error(`Failed to fetch index for runtime: ${runtime}`);
+                const msg = `Failed to fetch index for runtime[${runtime}] and version [${version}]`;
+                logger.error(msg)
+                return undefined;
             }
             
             // Convert to Lunr index

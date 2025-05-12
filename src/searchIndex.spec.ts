@@ -12,6 +12,38 @@ jest.mock('./services/fetch', () => {
       });
     }
     
+    // Check if this is a versions.json request
+    if (url.includes('versions.json')) {
+      if (url.includes('/python/')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: () => Promise.resolve([
+            { title: '3.12.0', version: '3.12.0', aliases: ['latest'] },
+            { title: '3.11.0', version: '3.11.0', aliases: [] }
+          ])
+        });
+      } else if (url.includes('/typescript/')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: () => Promise.resolve([
+            { title: '2.19.1', version: '2.19.1', aliases: ['latest'] },
+            { title: '2.18.0', version: '2.18.0', aliases: [] }
+          ])
+        });
+      } else {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: () => Promise.resolve([])
+        });
+      }
+    }
+    
     // Create mock response based on the runtime in the URL
     const runtime = url.includes('/python/') ? 'python' :
                    url.includes('/typescript/') ? 'typescript' :
@@ -52,12 +84,57 @@ jest.mock('./services/fetch', () => {
   });
   
   return {
-    FetchService: jest.fn().mockImplementation(() => {
-      return {
-        fetch: mockFetch
-      };
-    })
+    fetchService: {
+      fetch: mockFetch
+    }
   };
+});
+
+// Mock lunr
+jest.mock('lunr', () => {
+  return jest.fn().mockImplementation((config) => {
+    // Store the documents added to the index
+    const docs: any[] = [];
+    
+    // Call the config function with a mock builder
+    config.call({
+      ref: jest.fn(),
+      field: jest.fn(),
+      add: jest.fn().mockImplementation((doc) => {
+        docs.push(doc);
+      }),
+      search: jest.fn().mockImplementation((query) => {
+        // Simple mock search implementation
+        return docs
+          .filter(doc => 
+            doc.title.toLowerCase().includes(query.toLowerCase()) || 
+            doc.text.toLowerCase().includes(query.toLowerCase())
+          )
+          .map(doc => ({
+            ref: doc.location,
+            score: 10.0,
+            matchData: { metadata: {} }
+          }));
+      })
+    });
+    
+    // Return a mock index with the search function
+    return {
+      search: jest.fn().mockImplementation((query) => {
+        // Simple mock search implementation
+        return docs
+          .filter(doc => 
+            doc.title.toLowerCase().includes(query.toLowerCase()) || 
+            doc.text.toLowerCase().includes(query.toLowerCase())
+          )
+          .map(doc => ({
+            ref: doc.location,
+            score: 10.0,
+            matchData: { metadata: {} }
+          }));
+      })
+    };
+  });
 });
 
 // Helper function to measure memory usage
@@ -413,6 +490,30 @@ describe('[Search-Index] When limiting search results', () => {
     
     // Restore original search function
     index.index.search = originalSearch;
+  });
+});
+
+describe('[Search-Index] When testing version resolution', () => {
+  const factory = new SearchIndexFactory();
+  
+  it('should resolve "latest" to the actual version for Python', async () => {
+    const index = await factory.getIndex('python', 'latest');
+    expect(index?.version).toBe('3.12.0'); // Should resolve to the version with "latest" alias
+  });
+  
+  it('should resolve "latest" to the actual version for TypeScript', async () => {
+    const index = await factory.getIndex('typescript', 'latest');
+    expect(index?.version).toBe('2.19.1'); // Should resolve to the version with "latest" alias
+  });
+  
+  it('should use a specific version when requested for Python', async () => {
+    const index = await factory.getIndex('python', '3.11.0');
+    expect(index?.version).toBe('3.11.0');
+  });
+  
+  it('should return undefined when an invalid version is requested', async () => {
+    const index = await factory.getIndex('python', 'invalid-version');
+    expect(index).toBeUndefined(); // Should return undefined for invalid version
   });
 });
 

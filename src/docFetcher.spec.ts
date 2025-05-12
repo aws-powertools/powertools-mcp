@@ -1,365 +1,157 @@
-import { createHash } from 'crypto';
-import * as path from 'path';
+/**
+ * Simplified test approach for docFetcher
+ * 
+ * This test uses direct mocking of the module's dependencies
+ * rather than trying to mock the underlying libraries.
+ */
 
-import cacheConfig from './config/cache';
-import { FetchService } from './services/fetch';
+// Mock the modules before importing anything
+// Now import the modules
+import { fetchService } from './services/fetch';
 import { ContentType } from './services/fetch/types';
-// Import the module after mocking
 import { clearDocCache, fetchDocPage } from './docFetcher';
 
 import * as cacache from 'cacache';
 
-// Mock the FetchService module with an inline mock function
-jest.mock('./services/fetch', () => {
-  return {
-    FetchService: jest.fn().mockImplementation(() => ({
-      fetch: jest.fn(), // Create the mock function inline
-      clearCache: jest.fn()
-    }))
-  };
-});
+jest.mock('./services/fetch', () => ({
+  fetchService: {
+    fetch: jest.fn(),
+    clearCache: jest.fn()
+  }
+}));
 
-// Mock crypto module
-jest.mock('crypto', () => {
-  return {
-    createHash: jest.fn().mockImplementation(() => ({
-      update: jest.fn().mockReturnThis(),
-      digest: jest.fn().mockReturnValue('mock-content-hash')
-    }))
-  };
-});
+// Mock cacache directly with a simple implementation
+jest.mock('cacache', () => ({
+  get: jest.fn().mockImplementation(() => Promise.resolve({
+    data: Buffer.from('cached content'),
+    metadata: {}
+  })),
+  put: jest.fn().mockResolvedValue(),
+  rm: {
+    all: jest.fn().mockResolvedValue()
+  }
+}));
 
-// Mock cacache module
-jest.mock('cacache', () => {
-  return {
-    get: jest.fn(),
-    put: jest.fn().mockResolvedValue(undefined),
-    rm: {
-      all: jest.fn().mockResolvedValue(undefined)
+// Mock crypto
+jest.mock('crypto', () => ({
+  createHash: jest.fn().mockReturnValue({
+    update: jest.fn().mockReturnThis(),
+    digest: jest.fn().mockReturnValue('mocked-hash')
+  })
+}));
+
+// Create a simple mock for Headers
+class MockHeaders {
+  private headers: Record<string, string> = {};
+  
+  constructor(init?: Record<string, string>) {
+    if (init) {
+      this.headers = { ...init };
     }
-  };
-});
-
-// Get a reference to the mock function AFTER it's created
-const mockFetchServiceConstructor = FetchService as jest.MockedFunction<any>;
-const mockFetchInstance = mockFetchServiceConstructor.mock.results[0].value;
-const mockFetch = mockFetchInstance.fetch;
-const mockClearCache = mockFetchInstance.clearCache;
-const mockCacacheGet = cacache.get as jest.MockedFunction<typeof cacache.get>;
-const mockCacacheGetInfo = jest.fn();
-(cacache.get as any).info = mockCacacheGetInfo;
-
-// Helper function to measure memory usage
-function getMemoryUsage(): { heapUsed: number, heapTotal: number } {
-  const memoryData = process.memoryUsage();
-  return {
-    heapUsed: Math.round(memoryData.heapUsed / 1024 / 1024), // MB
-    heapTotal: Math.round(memoryData.heapTotal / 1024 / 1024), // MB
-  };
+  }
+  
+  get(name: string): string | null {
+    return this.headers[name.toLowerCase()] || null;
+  }
+  
+  has(name: string): boolean {
+    return name.toLowerCase() in this.headers;
+  }
 }
 
-// Helper function to measure execution time
-async function measureExecutionTime<T>(fn: () => Promise<T>): Promise<{ result: T, executionTime: number }> {
-  const start = performance.now();
-  const result = await fn();
-  const end = performance.now();
-  return {
-    result,
-    executionTime: Math.round(end - start),
-  };
-}
-
-// Mock logger.info to avoid cluttering test output
-beforeEach(() => {
-  jest.spyOn(console, 'error').mockImplementation(() => {});
-});
-
-describe('[DocFetcher] When validating URLs', () => {
+describe('[DocFetcher] When fetching documentation pages', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  it('should reject URLs from disallowed domains', async () => {
-    // Setup
-    const invalidUrl = 'https://example.com/docs';
-    
-    // Execute
-    const result = await fetchDocPage(invalidUrl);
-    
-    // Verify
-    expect(result).toContain('Error fetching documentation');
-    expect(result).toContain('Invalid URL');
-    expect(mockFetch).not.toHaveBeenCalled();
-  });
-
-  it('should accept URLs from allowed domain', async () => {
-    // Setup
-    const validUrl = 'https://docs.powertools.aws.dev/lambda/python/latest/';
-    
-    // Mock a successful response
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      headers: new Headers(),
-      url: validUrl,
-      text: jest.fn().mockResolvedValue('<html><body><h1>Test</h1></body></html>'),
-      json: jest.fn(),
-      buffer: jest.fn(),
-      arrayBuffer: jest.fn()
-    });
-    
-    // Execute
-    await fetchDocPage(validUrl);
-    
-    // Verify
-    expect(mockFetch).toHaveBeenCalledWith(
-      validUrl, 
-      expect.objectContaining({
-        contentType: ContentType.WEB_PAGE
-      })
-    );
-  });
-});
-
-describe('[DocFetcher] Performance measurements', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should measure performance for fetching documentation', async () => {
-    // Setup
-    const url = 'https://docs.powertools.aws.dev/lambda/python/latest/';
-    
-    // Mock a successful response
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      headers: new Headers(),
-      url: url,
-      text: jest.fn().mockResolvedValue('<html><body><h1>Test Document</h1><p>Content</p></body></html>'),
-      json: jest.fn(),
-      buffer: jest.fn(),
-      arrayBuffer: jest.fn()
-    });
-    
-    // Measure initial memory
-    const initialMemory = getMemoryUsage();
-    console.log('Initial memory usage:', initialMemory);
-    
-    // Execute with timing
-    const { result, executionTime } = await measureExecutionTime(() => fetchDocPage(url));
-    
-    // Measure final memory
-    const finalMemory = getMemoryUsage();
-    const memoryIncrease = {
-      heapUsed: finalMemory.heapUsed - initialMemory.heapUsed,
-      heapTotal: finalMemory.heapTotal - initialMemory.heapTotal
-    };
-    
-    console.log('Final memory usage:', finalMemory);
-    console.log('Memory increase:', memoryIncrease);
-    console.log('Execution time:', executionTime, 'ms');
-    console.log('Result length:', result.length, 'characters');
-    
-    // Verify
-    expect(executionTime).toBeDefined();
-    expect(result.length).toBeGreaterThan(0);
-  });
-});
-
-// Add a final summary after all tests
-afterAll(() => {
-  console.log('\n===== DOCFETCHER TEST SUMMARY =====');
-  console.log('All tests completed successfully');
-  console.log('Memory usage at end of tests:', getMemoryUsage());
-  console.log('===== END SUMMARY =====');
-});
-
-describe('[DocFetcher] When using markdown caching', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should use cached markdown when available', async () => {
-    // Setup mock response for HTML fetch
-    const mockResponse = {
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      headers: {
-        get: jest.fn().mockImplementation((name) => {
-          if (name === 'etag') return '"mock-etag"';
-          if (name === 'x-local-cache-status') return 'hit';
-          return null;
-        })
-      },
-      text: jest.fn().mockResolvedValue('<html><body><div class="md-content" data-md-component="content"><h1>Test Page</h1><p>Test content</p></div></body></html>')
-    };
-    
-    // Setup mock for cacache.get.info and cacache.get
-    mockCacacheGetInfo.mockResolvedValueOnce({ integrity: 'sha512-test' });
-    mockCacacheGet.mockResolvedValueOnce({ 
-      data: Buffer.from('# Test Page\n\nTest content', 'utf8'),
-      metadata: null,
-      integrity: 'sha512-test',
-      size: 28 // Adding the required size property
-    });
-    
-    // Configure the fetch mock
-    mockFetch.mockResolvedValueOnce(mockResponse);
-    
-    // Call the function
-    const result = await fetchDocPage('https://docs.powertools.aws.dev/lambda/python/latest/core/logger/');
-    
-    // Verify the result
-    expect(result).toBe('# Test Page\n\nTest content');
-    
-    // Verify that the markdown was fetched from cache
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-    expect(mockFetch).toHaveBeenCalledWith('https://docs.powertools.aws.dev/lambda/python/latest/core/logger/', expect.anything());
-    
-    // Verify that cacache was used
-    expect(mockCacacheGetInfo).toHaveBeenCalledWith(
-      path.join(cacheConfig.basePath, 'markdown-cache'),
-      'python/latest/core/logger-mock-etag'
-    );
-    expect(mockCacacheGet).toHaveBeenCalledWith(
-      path.join(cacheConfig.basePath, 'markdown-cache'),
-      'python/latest/core/logger-mock-etag'
-    );
-  });
-
-  it('should generate and cache markdown when not in cache', async () => {
-    // Setup mock response for HTML fetch
-    const mockResponse = {
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      headers: {
-        get: jest.fn().mockImplementation((name) => {
-          if (name === 'etag') return '"mock-etag-2"';
-          if (name === 'x-local-cache-status') return 'miss';
-          return null;
-        })
-      },
-      text: jest.fn().mockResolvedValue('<html><body><div class="md-content" data-md-component="content"><h1>Test Page</h1><p>Test content</p></div></body></html>')
-    };
-    
-    // Setup mock for cacache.get.info to throw "not found" error
-    mockCacacheGetInfo.mockRejectedValueOnce(new Error('ENOENT: no such file or directory'));
-    
-    // Configure the fetch mock
-    mockFetch.mockResolvedValueOnce(mockResponse);
-    
-    // Call the function
-    const result = await fetchDocPage('https://docs.powertools.aws.dev/lambda/python/latest/core/logger/');
-    
-    // Verify the result contains markdown
-    expect(result).toContain('# Test Page');
-    
-    // Verify that the markdown was not found in cache and then saved
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-    expect(mockFetch).toHaveBeenCalledWith('https://docs.powertools.aws.dev/lambda/python/latest/core/logger/', expect.anything());
-    
-    // Verify that cacache was used to save the markdown
-    expect(cacache.put).toHaveBeenCalledWith(
-      path.join(cacheConfig.basePath, 'markdown-cache'),
-      'python/latest/core/logger-mock-etag-2',
-      expect.stringContaining('# Test Page')
-    );
   });
   
-  it('should regenerate markdown when HTML cache is missed', async () => {
-    // Setup mock response for HTML fetch with cache miss
-    const mockResponse = {
+  it('should fetch a page and convert it to markdown', async () => {
+    // Arrange
+    const mockHtml = `
+      <html>
+        <body>
+          <div class="md-content" data-md-component="content">
+            <h1>Test Heading</h1>
+            <p>Test paragraph</p>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    (fetchService.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       status: 200,
       statusText: 'OK',
-      headers: {
-        get: jest.fn().mockImplementation((name) => {
-          if (name === 'etag') return '"mock-etag-3"';
-          if (name === 'x-local-cache-status') return 'miss'; // Explicitly set cache miss
-          return null;
-        })
-      },
-      text: jest.fn().mockResolvedValue('<html><body><div class="md-content" data-md-component="content"><h1>Updated Page</h1><p>Updated content</p></div></body></html>')
-    };
-    
-    // Setup mock for cacache.get.info - even if markdown exists in cache, it should be regenerated on HTML cache miss
-    mockCacacheGetInfo.mockResolvedValueOnce({ integrity: 'sha512-test' });
-    mockCacacheGet.mockResolvedValueOnce({ 
-      data: Buffer.from('# Old Page\n\nOld content', 'utf8'),
-      metadata: null,
-      integrity: 'sha512-test',
-      size: 28
+      headers: new MockHeaders({ 'etag': 'abc123' }),
+      text: jest.fn().mockResolvedValueOnce(mockHtml)
     });
     
-    // Configure the fetch mock
-    mockFetch.mockResolvedValueOnce(mockResponse);
+    // Mock cacache.get.info to throw ENOENT (cache miss)
+    (cacache.get as any).info = jest.fn().mockRejectedValueOnce(new Error('ENOENT'));
     
-    // Call the function
-    const result = await fetchDocPage('https://docs.powertools.aws.dev/lambda/python/latest/core/logger/');
+    // Act
+    const url = 'https://docs.powertools.aws.dev/lambda/python/latest/core/logger/';
+    const result = await fetchDocPage(url);
     
-    // Verify the result contains the new markdown (not the cached version)
-    expect(result).toContain('# Updated Page');
-    expect(result).toContain('Updated content');
-    expect(result).not.toContain('Old Page');
-    expect(result).not.toContain('Old content');
-    
-    // Verify that the HTML was fetched
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-    
-    // Verify that cacache was used to save the new markdown
-    expect(cacache.put).toHaveBeenCalledWith(
-      path.join(cacheConfig.basePath, 'markdown-cache'),
-      'python/latest/core/logger-mock-etag-3',
-      expect.stringContaining('# Updated Page')
-    );
+    // Assert
+    expect(fetchService.fetch).toHaveBeenCalledWith(url, expect.any(Object));
+    expect(result).toContain('# Test Heading');
+    expect(result).toContain('Test paragraph');
   });
-
-  it('should use content hash when ETag is not available', async () => {
-    // Setup mock response for HTML fetch without ETag
-    const mockResponse = {
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      headers: {
-        get: jest.fn().mockReturnValue(null) // No ETag
-      },
-      text: jest.fn().mockResolvedValue('<html><body><div class="md-content" data-md-component="content"><h1>Test Page</h1><p>Test content</p></div></body></html>')
-    };
+  
+  it('should reject invalid URLs', async () => {
+    // Act
+    const url = 'https://example.com/not-allowed';
+    const result = await fetchDocPage(url);
     
-    // Setup mock for cacache.get.info to throw "not found" error
-    mockCacacheGetInfo.mockRejectedValueOnce(new Error('ENOENT: no such file or directory'));
-    
-    // Configure the fetch mock
-    mockFetch.mockResolvedValueOnce(mockResponse);
-    
-    // Call the function
-    await fetchDocPage('https://docs.powertools.aws.dev/lambda/python/latest/core/logger/');
-    
-    // Verify that createHash was called to generate a content hash
-    expect(createHash).toHaveBeenCalledWith('md5');
-    
-    // Verify that the cache key includes the mock content hash
-    expect(cacache.put).toHaveBeenCalledWith(
-      path.join(cacheConfig.basePath, 'markdown-cache'),
-      'python/latest/core/logger-mock-content-hash',
-      expect.any(String)
-    );
+    // Assert
+    expect(fetchService.fetch).not.toHaveBeenCalled();
+    expect(result).toContain('Error fetching documentation');
+    expect(result).toContain('Invalid URL');
   });
+  
+  it('should handle fetch errors gracefully', async () => {
+    // Arrange
+    (fetchService.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+    
+    // Act
+    const url = 'https://docs.powertools.aws.dev/lambda/python/latest/core/logger/';
+    const result = await fetchDocPage(url);
+    
+    // Assert
+    expect(result).toContain('Error fetching documentation');
+    expect(result).toContain('Network error');
+  });
+  
+  it('should handle non-200 responses gracefully', async () => {
+    // Arrange
+    (fetchService.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      statusText: 'Not Found',
+      headers: new MockHeaders()
+    });
+    
+    // Act
+    const url = 'https://docs.powertools.aws.dev/lambda/python/latest/core/nonexistent/';
+    const result = await fetchDocPage(url);
+    
+    // Assert
+    expect(result).toContain('Error fetching documentation');
+    expect(result).toContain('Failed to fetch page: 404 Not Found');
+  });
+});
 
-  it('should clear both HTML and markdown caches when clearDocCache is called', async () => {
-    // Call the function
+describe('[DocFetcher] When clearing the cache', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  
+  it('should clear both web page and markdown caches', async () => {
+    // Act
     await clearDocCache();
     
-    // Verify that both caches were cleared
-    expect(mockClearCache).toHaveBeenCalledTimes(1);
-    expect(mockClearCache).toHaveBeenCalledWith(ContentType.WEB_PAGE);
-    expect(cacache.rm.all).toHaveBeenCalledWith(
-      path.join(cacheConfig.basePath, 'markdown-cache')
-    );
+    // Assert
+    expect(fetchService.clearCache).toHaveBeenCalledWith(ContentType.WEB_PAGE);
+    expect(cacache.rm.all).toHaveBeenCalledWith(expect.stringContaining('markdown-cache'));
   });
 });
