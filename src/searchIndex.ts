@@ -144,41 +144,55 @@ export class SearchIndexFactory {
     }
 
     // Resolve version (handle aliases like "latest")
-    async resolveVersion(runtime: string, requestedVersion: string): Promise<string> {
+    async resolveVersion(runtime: string, requestedVersion: string): Promise<{resolved: string, available: Array<{title: string, version: string, aliases: string[]}> | undefined, valid: boolean}> {
         // For Java and .NET that don't use versions yet, return "latest"
         if (runtime !== 'python' && runtime !== 'typescript') {
-            return 'latest';
+            return { resolved: 'latest', available: undefined, valid: true };
         }
         
         const versions = await fetchAvailableVersions(runtime);
         
         // If no versions found, return requested version
         if (!versions || versions.length === 0) {
-            return requestedVersion;
+            return { resolved: requestedVersion, available: versions, valid: false };
         }
         
         // If requested version is an alias, resolve it
         if (requestedVersion === 'latest') {
             // Find version with "latest" alias
             const latestVersion = versions.find(v => v.aliases.includes('latest'));
-            return latestVersion ? latestVersion.version : versions[0].version;
+            return { 
+                resolved: latestVersion ? latestVersion.version : versions[0].version, 
+                available: versions,
+                valid: true
+            };
         }
         
         // Check if requested version exists
         const versionExists = versions.some(v => v.version === requestedVersion);
         if (versionExists) {
-            return requestedVersion;
+            return { resolved: requestedVersion, available: versions, valid: true };
         }
         
-        // Fall back to latest if requested version doesn't exist
-        logger.info(`Version ${requestedVersion} not found for ${runtime}, falling back to latest`);
-        const latestVersion = versions.find(v => v.aliases.includes('latest'));
-        return latestVersion ? latestVersion.version : versions[0].version;
+        // Return information about invalid version
+        logger.info(`Version ${requestedVersion} not found for ${runtime}`);
+        return { 
+            resolved: requestedVersion, 
+            available: versions,
+            valid: false
+        };
     }
 
     async getIndex(runtime: string, version = 'latest'): Promise<SearchIndex | undefined> {
         // Resolve version first
-        const resolvedVersion = await this.resolveVersion(runtime, version);
+        const versionInfo = await this.resolveVersion(runtime, version);
+        
+        // If version is invalid, return undefined
+        if (!versionInfo.valid) {
+            return undefined;
+        }
+        
+        const resolvedVersion = versionInfo.resolved;
         const cacheKey = this.getCacheKey(runtime, resolvedVersion);
 
         if (this.indices.has(cacheKey)) {

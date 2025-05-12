@@ -511,9 +511,9 @@ describe('[Search-Index] When testing version resolution', () => {
     expect(index?.version).toBe('3.11.0');
   });
   
-  it('should fall back to latest when an invalid version is requested', async () => {
+  it('should return undefined when an invalid version is requested', async () => {
     const index = await factory.getIndex('python', 'invalid-version');
-    expect(index?.version).toBe('3.12.0'); // Should fall back to latest
+    expect(index).toBeUndefined(); // Should return undefined for invalid version
   });
 });
 

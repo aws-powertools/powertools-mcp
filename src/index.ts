@@ -80,13 +80,52 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const runtime = parsed.data.runtime.trim().toLowerCase();
         const version = parsed.data.version?.trim().toLowerCase() || 'latest';
 
+        // First, check if the version is valid
+        const versionInfo = await searchIndexes.resolveVersion(runtime, version);
+        if (!versionInfo.valid) {
+          // Return an error with available versions
+          const availableVersions = versionInfo.available?.map(v => v.version ) || [];
+          
+          return {
+            content: [{ 
+              type: "text", 
+              text: JSON.stringify({
+                error: `Invalid version: ${version} for runtime: ${runtime}`,
+                availableVersions
+              })
+            }],
+            isError: true
+          };
+        }
+
         // do the search
         const idx = await searchIndexes.getIndex(runtime, version);
         if (!idx) {
-          throw new Error(`Invalid runtime: ${runtime}`);
+          // If we get here, it's likely an invalid runtime since version validation already happened
+          logger.warn(`Invalid runtime: ${runtime}`);
+          return {
+            content: [{ 
+              type: "text", 
+              text: JSON.stringify({
+                error: `Invalid runtime: ${runtime}`,
+                availableRuntimes: runtimes
+              })
+            }],
+            isError: true
+          };
         }
         if (!idx.index || !idx.documents) {
-          throw new Error(`Invalid index: ${runtime}`);
+          logger.warn(`Invalid index for runtime: ${runtime}, version: ${version}`);
+          return {
+            content: [{ 
+              type: "text", 
+              text: JSON.stringify({
+                error: `Failed to load index for runtime: ${runtime}, version: ${version}`,
+                suggestion: "Try using 'latest' version or check network connectivity"
+              })
+            }],
+            isError: true
+          };
         }
         
         // Use the searchDocuments function to get enhanced results
