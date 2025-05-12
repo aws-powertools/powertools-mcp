@@ -3,7 +3,7 @@ import { createHash } from 'crypto';
 import * as path from 'path';
 
 import cacheConfig from './config/cache';
-import { FetchService } from './services/fetch';
+import { fetchService } from './services/fetch';
 import { ContentType } from './services/fetch/types';
 import { logger } from './services/logger';
 
@@ -17,9 +17,6 @@ const ALLOWED_DOMAIN = 'docs.powertools.aws.dev';
 
 // Constants for performance tuning
 const FETCH_TIMEOUT_MS = 15000; // 15 seconds timeout for fetch operations
-
-// Initialize the fetch service with disk-based caching
-const fetchService = new FetchService(cacheConfig);
 
 /**
  * Validates that a URL belongs to the allowed domain

@@ -1,6 +1,6 @@
 import { logger } from "./services/logger/index";
 import { fetchDocPage } from "./docFetcher";
-import { searchDocuments,SearchIndexFactory } from "./searchIndex";
+import { searchDocuments, SearchIndexFactory } from "./searchIndex";
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -17,11 +17,12 @@ type ToolInput = z.infer<typeof _ToolInputSchema>;
 
 // Class managing the Search indexes for searching
 const searchIndexes = new SearchIndexFactory();
+const runtimes = ["java", "dotnet", "typescript", "python"] as const;
 
 const searchDocsSchema = z.object({
-  search: z.string(),
-  runtime: z.string(), 
-  version: z.string().optional(), 
+  search: z.string().describe('what to search for'),
+  runtime: z.enum(runtimes).describe('the runtime index to search'), 
+  version: z.string().optional().describe('version is always semantic 3 digit in the form x.y.z'), 
 });
 
 const fetchDocSchema = z.object({
@@ -47,20 +48,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "search_docs",
         description: 
-          "Perform a search of the Powertools for AWS Lambda documentation index to find web page references online. " +
-          "Great for finding more details on Powertools features and functions using text search. " +
-          "Try searching for features like 'Logger', 'Tracer', 'Metrics', 'Idempotency', 'batchProcessor', etc. " +
+          "Search Powertools for AWS Lambda documentation to learn about Serverless best practices. " +
+          "Try searching for features like 'Logger', 'Tracer', 'Metrics', 'Idempotency', 'batchProcessor', event handler, etc. " +
           "Powertools is available for the following runtimes: python, typescript, java, dotnet. " +
-          "If a specific version is not mentioned the search service will use the latest documentation.",
+          "You can ask whether a specific version of powertools is in use and pass that along with the search.",
         inputSchema: zodToJsonSchema(searchDocsSchema) as ToolInput,
       },
       {
         name: "fetch_doc_page",
         description:
-          "Fetches the content of a Powertools documentation page and returns it as markdown. " +
-          "This allows you to read the full documentation for a specific feature or function. " +
-          "You MUST use the url returned form the search_docs tool since this will be the page to load." +
-          "The URL must be from the docs.powertools.aws.dev domain. " +
+          "Fetches the content of a Powertools documentation page and returns it as markdown." +
           "Use this after finding relevant pages with search_docs to get detailed information.",
         inputSchema: zodToJsonSchema(fetchDocSchema) as ToolInput,
       }
@@ -83,7 +80,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const runtime = parsed.data.runtime.trim().toLowerCase();
         const version = parsed.data.version?.trim().toLowerCase() || 'latest';
 
-      
         // do the search
         const idx = await searchIndexes.getIndex(runtime, version);
         if (!idx) {
@@ -94,7 +90,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         
         // Use the searchDocuments function to get enhanced results
-        logger.info(`Searching for "${search}" in ${runtime} ${version}`);
+        logger.info(`Searching for "${search}" in ${runtime} ${version} (resolved to ${idx.version})`);
         const results = searchDocuments(idx.index, idx.documents, search);
         logger.info(`Search results for "${search}" in ${runtime}`, { results: results.length });
         
@@ -103,7 +99,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           // Python and TypeScript include version in URL, Java and .NET don't
           let url;
           if (runtime === 'python' || runtime === 'typescript') {
-            url = `https://docs.powertools.aws.dev/lambda/${runtime}/${version}/${result.ref}`;
+            url = `https://docs.powertools.aws.dev/lambda/${runtime}/${idx.version}/${result.ref}`;
           } else {
             // For Java and .NET, no version in URL
             url = `https://docs.powertools.aws.dev/lambda/${runtime}/${result.ref}`;
