@@ -31,6 +31,32 @@ describe('[Markdown-Converter] When using NodeHtmlMarkdownConverter', () => {
       const result = converter.extractContent(html);
       expect(result.content).toContain('Test content');
     });
+    
+    it('should extract complete content from md-content div with nested elements', () => {
+      const html = `
+        <html>
+          <body>
+            <div class="md-content" data-md-component="content">
+              <h2>Section 1</h2>
+              <p>First paragraph</p>
+              <div class="nested">
+                <h3>Subsection</h3>
+                <p>Nested content</p>
+              </div>
+              <h2>Section 2</h2>
+              <p>Final paragraph</p>
+            </div>
+          </body>
+        </html>
+      `;
+      const result = converter.extractContent(html);
+      expect(result.content).toContain('Section 1');
+      expect(result.content).toContain('First paragraph');
+      expect(result.content).toContain('Subsection');
+      expect(result.content).toContain('Nested content');
+      expect(result.content).toContain('Section 2');
+      expect(result.content).toContain('Final paragraph');
+    });
   });
 
   describe('[Markdown-Conversion] When converting HTML to markdown', () => {

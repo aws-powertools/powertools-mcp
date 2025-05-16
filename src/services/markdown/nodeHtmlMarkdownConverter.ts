@@ -1,5 +1,6 @@
 import { HtmlToMarkdownConverter } from './types';
 
+import * as cheerio from 'cheerio';
 import { NodeHtmlMarkdown, NodeHtmlMarkdownOptions } from 'node-html-markdown';
 
 /**
@@ -44,24 +45,34 @@ export class NodeHtmlMarkdownConverter implements HtmlToMarkdownConverter {
   }
   
   /**
-   * Extract title and main content from HTML using regex
+   * Extract title and main content from HTML using cheerio DOM parser
    * @param html The HTML content to process
    * @returns Object containing title and main content
    */
   extractContent(html: string): { title: string, content: string } {
-    // Simple regex approach for title extraction
-    const titleMatch = html.match(/<h1[^>]*>(.*?)<\/h1>/i) || 
-                      html.match(/<title[^>]*>(.*?)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].trim() : '';
+    // Load HTML into cheerio
+    const $ = cheerio.load(html);
+    
+    // Extract title - first try h1, then fall back to title tag
+    let title = $('h1').first().text().trim();
+    if (!title) {
+      title = $('title').text().trim();
+    }
     
     // Extract main content - target the md-content container
-    const contentMatch = html.match(/<div class="md-content"[^>]*data-md-component="content"[^>]*>([\s\S]*?)<\/div>/i);
+    let contentHtml = '';
     
-    // If we found the main content container, use it; otherwise use the body
-    const content = contentMatch ? 
-      contentMatch[0] : 
-      html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[0] || html;
+    // First try to find the main content container
+    const mdContent = $('div.md-content[data-md-component="content"]');
     
-    return { title, content };
+    if (mdContent.length > 0) {
+      // Get the HTML content of the md-content div
+      contentHtml = mdContent.html() || '';
+    } else {
+      // Fall back to body content if md-content not found
+      contentHtml = $('body').html() || html;
+    }
+    
+    return { title, content: contentHtml };
   }
 }
