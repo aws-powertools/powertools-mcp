@@ -1,4 +1,3 @@
-// Import domino using dynamic import to avoid TypeScript module issues
 import { createHash } from 'crypto';
 import * as path from 'path';
 
@@ -6,11 +5,9 @@ import cacheConfig from './config/cache';
 import { fetchService } from './services/fetch';
 import { ContentType } from './services/fetch/types';
 import { logger } from './services/logger';
+import { ConverterFactory } from './services/markdown';
 
-// @ts-expect-error - Importing domino which doesn't have proper TypeScript definitions
-import domino from '@mixmark-io/domino';
 import * as cacache from 'cacache';
-import TurndownService from 'turndown';
 
 // Allowed domain for security
 const ALLOWED_DOMAIN = 'docs.powertools.aws.dev';
@@ -30,77 +27,6 @@ function isValidUrl(url: string): boolean {
   } catch {
     return false;
   }
-}
-
-/**
- * Configure Turndown with custom rules for better Markdown conversion
- * @returns Configured Turndown service
- */
-function configureTurndown(): TurndownService {
-  const turndownService = new TurndownService({
-    headingStyle: 'atx',
-    codeBlockStyle: 'fenced',
-    emDelimiter: '*',
-    bulletListMarker: '*',
-    strongDelimiter: '**'
-  });
-
-  // Improve code block handling
-  turndownService.addRule('fencedCodeBlock', {
-    filter: (node): boolean => {
-      return (
-        node.nodeName === 'PRE' &&
-        node.firstChild !== null &&
-        node.firstChild.nodeName === 'CODE'
-      );
-    },
-    replacement: (content, node) => {
-      const code = node.firstChild as HTMLElement;
-      const className = code.getAttribute('class') || '';
-      const language = className.match(/language-(\w+)/)?.[1] || '';
-      return `\n\`\`\`${language}\n${code.textContent}\n\`\`\`\n\n`;
-    }
-  });
-
-  // Improve table handling
-  turndownService.addRule('tableRule', {
-    filter: 'table',
-    replacement: (content) => {
-      // For complex tables, we might want to keep the HTML
-      return content.trim() ? `\n\n${content}\n\n` : '';
-    }
-  });
-
-  return turndownService;
-}
-
-/**
- * Extract content from HTML string using domino
- * @param html The HTML string to process
- * @returns Object containing title and main content element
- */
-function extractContent(html: string): { title: string, content: string } {
-  // Create a DOM document using domino
-  const doc = domino.createDocument(html);
-  
-  // Remove script and style tags
-  const scripts = doc.querySelectorAll('script, style');
-  scripts.forEach((script: Element) => script.parentNode?.removeChild(script));
-  
-  // Get the title
-  const titleElement = doc.querySelector('h1') || doc.querySelector('title');
-  const title = titleElement ? titleElement.textContent?.trim() || '' : '';
-  
-  // Extract the main content - specifically target the md-content container
-  const mainContent = doc.querySelector('div.md-content[data-md-component="content"]');
-  
-  // If we found the main content container, use it; otherwise fall back to body
-  const contentElement = mainContent || doc.body;
-  
-  return {
-    title,
-    content: contentElement.innerHTML
-  };
 }
 
 /**
@@ -201,7 +127,7 @@ async function saveMarkdownToCache(cacheKey: string, markdown: string): Promise<
 }
 
 /**
- * Fetches a documentation page and converts it to markdown using Turndown
+ * Fetches a documentation page and converts it to markdown using the configured converter
  * Uses disk-based caching with ETag validation for efficient fetching
  * Also caches the converted markdown to avoid redundant conversions
  * 
@@ -237,7 +163,6 @@ export async function fetchDocPage(url: string): Promise<string> {
       
       // Check if the response came from cache
       const fromCache = response.headers.get('x-local-cache-status') === 'hit';
-      // logger.info(`[WEB CACHE] Response: `, response.headers)
       logger.info(`[WEB ${fromCache ? 'CACHE HIT' : 'CACHE MISS'}] HTML content ${fromCache ? 'retrieved from cache' : 'fetched from network'} for ${url}`);
       
       // Get the ETag from response headers
@@ -264,16 +189,18 @@ export async function fetchDocPage(url: string): Promise<string> {
       
       logger.info(`[CACHE MISS] Markdown not found in cache for ${url} with key ${cacheKey}, converting HTML to markdown`);
       
-      // If not in cache, extract content and convert to markdown
-      const { title, content } = extractContent(html);
-      const turndownService = configureTurndown();
+      // Create an instance of the HTML-to-markdown converter
+      const converter = ConverterFactory.createConverter();
+      
+      // Extract content and convert to markdown
+      const { title, content } = converter.extractContent(html);
       
       // Build markdown content
       let markdown = '';
       if (title) {
         markdown = `# ${title}\n\n`;
       }
-      markdown += turndownService.turndown(content);
+      markdown += converter.convert(content);
       
       // Cache the markdown for future use
       await saveMarkdownToCache(cacheKey, markdown);
