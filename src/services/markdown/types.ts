@@ -1,4 +1,9 @@
 /**
+ * Copyright (c) 2025 Michael Walmsley, ServerlessDNA.com
+ * Licensed under the MIT License.
+ */
+
+/**
  * Interface for HTML-to-markdown conversion
  */
 export interface HtmlToMarkdownConverter {
