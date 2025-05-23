@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2025 Michael Walmsley, ServerlessDNA.com
+ * Licensed under the MIT License.
+ */
+
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';

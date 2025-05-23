@@ -1,4 +1,9 @@
 /**
+ * Copyright (c) 2025 Michael Walmsley, ServerlessDNA.com
+ * Licensed under the MIT License.
+ */
+
+/**
  * Cache Manager for handling file system operations related to caching
  */
 import * as fs from 'fs/promises';

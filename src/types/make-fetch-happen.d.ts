@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2025 Michael Walmsley, ServerlessDNA.com
+ * Licensed under the MIT License.
+ */
+
 // src/types/make-fetch-happen.d.ts
 declare module 'make-fetch-happen' {
     export interface Headers {

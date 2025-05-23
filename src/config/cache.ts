@@ -1,4 +1,9 @@
 /**
+ * Copyright (c) 2025 Michael Walmsley, ServerlessDNA.com
+ * Licensed under the MIT License.
+ */
+
+/**
  * Cache configuration for the fetch service
  */
 import * as os from 'os';

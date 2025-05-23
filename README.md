@@ -120,4 +120,6 @@ The output is a bundled file which enables Node installed in windows to run the 
 
 ## License
 
-MIT
+MIT License
+
+Copyright (c) 2025 Michael Walmsley, ServerlessDNA.com

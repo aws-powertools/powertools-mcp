@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2025 Michael Walmsley, ServerlessDNA.com
+ * Licensed under the MIT License.
+ */
+
 import { logger } from "./services/logger/index";
 import { fetchDocPage } from "./docFetcher";
 import { searchDocuments, SearchIndexFactory } from "./searchIndex";

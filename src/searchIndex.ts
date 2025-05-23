@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2025 Michael Walmsley, ServerlessDNA.com
+ * Licensed under the MIT License.
+ */
+
 import { fetchService } from './services/fetch';
 import { ContentType } from './services/fetch/types';
 import { logger } from './services/logger';

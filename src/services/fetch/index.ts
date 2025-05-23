@@ -1,4 +1,9 @@
 /**
+ * Copyright (c) 2025 Michael Walmsley, ServerlessDNA.com
+ * Licensed under the MIT License.
+ */
+
+/**
  * Export the FetchService and related types from the fetch module
  */
 import cacheConfig from '../../config/cache';

@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2025 Michael Walmsley, ServerlessDNA.com
+ * Licensed under the MIT License.
+ */
+
 import { LogFileManager } from './fileManager';
 import { createFormattedFileStream } from './formatter';
 
