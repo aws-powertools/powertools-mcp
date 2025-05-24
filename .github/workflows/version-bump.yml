@@ -12,6 +12,7 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+      actions: write  # Added for triggering workflows
     if: '!contains(github.event.head_commit.message, ''skip ci'') && !contains(github.event.head_commit.message, ''chore(release)'')'
     
     steps:
@@ -19,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -59,13 +60,14 @@ jobs:
         
       - name: Test Release (Dry Run)
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: pnpm release:dry-run
         
       - name: Update or Create GitHub Release Draft
+        id: create_release
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           # Get the next version from semantic-release
@@ -73,10 +75,12 @@ jobs:
           
           if [ -z "$VERSION" ]; then
             echo "No version change detected, skipping release creation"
+            echo "version=" >> $GITHUB_OUTPUT
             exit 0
           fi
           
           echo "Next version will be: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           
           # Update package.json version
           npm version $VERSION --no-git-tag-version
@@ -147,3 +151,13 @@ jobs:
           git add package.json
           git commit -m "chore(release): bump version to $VERSION [skip ci]"
           git push
+          
+      - name: Trigger Release Workflow
+        if: steps.create_release.outputs.version != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Triggering release workflow for version ${{ steps.create_release.outputs.version }}"
+          gh workflow run release.yml \
+            --field releaseType=auto \
+            --field version=${{ steps.create_release.outputs.version }}
