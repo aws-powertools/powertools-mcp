@@ -13,8 +13,10 @@ on:
           - patch
           - minor
           - major
-  push:
-    branches: [ main ]
+      version:
+        description: 'Version number (for auto-triggered releases)'
+        required: false
+        type: 'string'
 
 jobs:
   release:
@@ -24,14 +26,13 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-    if: "!contains(github.event.head_commit.message, 'skip ci') && !contains(github.event.head_commit.message, 'chore(release)')"
     
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -70,13 +71,48 @@ jobs:
       - name: Test
         run: pnpm test:ci
         
+      - name: Check for Draft Release
+        if: github.event.inputs.version != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          echo "Checking for draft release v$VERSION"
+          
+          # Check if draft release exists
+          RELEASE_EXISTS=$(gh release view v$VERSION --json isDraft 2>/dev/null || echo "{}")
+          IS_DRAFT=$(echo "$RELEASE_EXISTS" | jq -r '.isDraft // false')
+          
+          if [ "$IS_DRAFT" != "true" ]; then
+            echo "No draft release found for v$VERSION, creating one..."
+            gh release create v$VERSION \
+              --draft \
+              --title "v$VERSION" \
+              --notes "Release v$VERSION"
+          else
+            echo "Draft release v$VERSION found"
+          fi
+        
       - name: Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.releaseType }}" != "auto" ]; then
+          if [ "${{ github.event.inputs.releaseType }}" != "auto" ]; then
+            # Manual release with specific type
             pnpm release --release-as ${{ github.event.inputs.releaseType }}
           else
+            # Auto release (triggered by version-bump workflow)
             pnpm release
           fi
+          
+      - name: Publish Draft Release
+        if: github.event.inputs.version != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          echo "Publishing draft release v$VERSION"
+          
+          # Convert draft to published release
+          gh release edit v$VERSION --draft=false
