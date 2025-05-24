@@ -1,3 +1,10 @@
+## [0.8.2](https://github.com/serverless-dna/powertools-mcp/compare/v0.8.1...v0.8.2) (2025-05-24)
+
+
+### Bug Fixes
+
+* **actions:** ensure dry-run actions have NPM_TOKEN ([#39](https://github.com/serverless-dna/powertools-mcp/issues/39)) ([0aa9e96](https://github.com/serverless-dna/powertools-mcp/commit/0aa9e96ae1f702de35c79aa8e56cb24695112a31))
+
 ## [0.8.1](https://github.com/serverless-dna/powertools-mcp/compare/v0.8.0...v0.8.1) (2025-05-16)
 
 
