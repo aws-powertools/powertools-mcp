@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2025 Michael Walmsley, ServerlessDNA.com
+ * Licensed under the MIT License.
+ */
+
 import { HtmlToMarkdownConverter } from './types';
 
 import * as cheerio from 'cheerio';
@@ -11,28 +16,40 @@ export class NodeHtmlMarkdownConverter implements HtmlToMarkdownConverter {
   
   constructor() {
     const options: NodeHtmlMarkdownOptions = {
-      // Base configuration
-      headingStyle: 'atx',
+      preferNativeParser: false,
       codeBlockStyle: 'fenced',
+      codeFence: '```',
       bulletMarker: '*',
       emDelimiter: '*',
       strongDelimiter: '**',
-      
-      // Custom element handlers
-      customCodeBlockHandler: (element) => {
-        // Extract language from class attribute
-        const className = element.getAttribute('class') || '';
-        const language = className.match(/language-(\w+)/)?.[1] || '';
-        
-        // Get the code content
-        const content = element.textContent || '';
-        
-        // Return formatted code block
-        return `\n\`\`\`${language}\n${content}\n\`\`\`\n\n`;
-      }
+      strikeDelimiter: '~~',
+      maxConsecutiveNewlines: 3,
+      lineStartEscape: [/^(\s*)([-*+]|\d+\.)(\s)/, '$1\\$2$3'] as [RegExp, string],
+      globalEscape: [/[\\`*_~[\]]/g, '\\$&'] as [RegExp, string]
     };
     
-    this.nhm = new NodeHtmlMarkdown(options);
+    // Create instance with custom translator for code blocks
+    this.nhm = new NodeHtmlMarkdown(
+      options,
+      {
+        'pre': {
+          postprocess: (ctx) => {
+            const codeElement = ctx.node.querySelector('code');
+            if (!codeElement) return ctx.content;
+
+            // Extract language from class attribute
+            const className = codeElement.getAttribute('class') || '';
+            const language = className.match(/language-(\w+)/)?.[1] || '';
+            
+            // Get the code content
+            const content = codeElement.textContent || '';
+            
+            // Return formatted code block
+            return `\n\`\`\`${language}\n${content}\n\`\`\`\n\n`;
+          }
+        }
+      }
+    );
   }
   
   /**

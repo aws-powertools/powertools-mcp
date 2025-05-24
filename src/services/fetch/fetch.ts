@@ -1,4 +1,9 @@
 /**
+ * Copyright (c) 2025 Michael Walmsley, ServerlessDNA.com
+ * Licensed under the MIT License.
+ */
+
+/**
  * Fetch Service wrapped around "make-fetch-happen" module.
  * 
  * This service provides a content-type aware HTTP client with configurable caching strategies.
