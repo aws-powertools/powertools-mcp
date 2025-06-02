@@ -1,8 +1,12 @@
 name: Version Bump
 
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      comment:
+        description: 'Comment for running this workflow manually'
+        required: false
+        type: 'string'
 
 jobs:
   version-bump:
@@ -13,7 +17,7 @@ jobs:
       issues: write
       pull-requests: write
       actions: write  # Added for triggering workflows
-    if: '!contains(github.event.head_commit.message, ''skip ci'') && !contains(github.event.head_commit.message, ''chore(release)'')'
+    if: ${{ false }}
     
     steps:
       - name: Checkout
@@ -152,12 +156,10 @@ jobs:
           git commit -m "chore(release): bump version to $VERSION [skip ci]"
           git push
           
-      - name: Trigger Release Workflow
+      - name: Output Version Information
         if: steps.create_release.outputs.version != ''
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Triggering release workflow for version ${{ steps.create_release.outputs.version }}"
-          gh workflow run release.yml \
-            --field releaseType=auto \
-            --field version=${{ steps.create_release.outputs.version }}
+          echo "Version ${{ steps.create_release.outputs.version }} is ready for release"
+          echo "To complete the release process, manually run the release workflow with:"
+          echo "  - releaseType: auto"
+          echo "  - version: ${{ steps.create_release.outputs.version }}"
