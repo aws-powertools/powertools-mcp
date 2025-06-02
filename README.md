@@ -1,3 +1,15 @@
+<div align="center">
+
+### ⚠️ EXPERIMENTAL PROJECT ⚠️
+[![Status](https://img.shields.io/badge/Status-Experimental-orange.svg)](https://shields.io/)
+[![Stability](https://img.shields.io/badge/Stability-Evolving-yellow.svg)](https://shields.io/)
+
+**This repository contains experimental code under active development.  
+APIs and features may change frequently without notice.**
+
+---
+</div>
+
 # Powertools MCP Search Server
 
 A Model Context Protocol (MCP) server that provides search functionality for AWS Lambda Powertools documentation across multiple runtimes.
