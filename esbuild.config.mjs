@@ -6,7 +6,7 @@ async function runBuild() {
       entryPoints: ['src/index.ts'],
       bundle: true,
       platform: 'node',
-      target: 'node18',
+      target: 'node22',
       outdir: 'dist',
       sourcemap: true,
       minify: true,
