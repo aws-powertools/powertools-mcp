@@ -1,0 +1,44 @@
+name: Run unit tests
+
+# 
+# PROCESS
+#
+# 1. Checkout code
+# 2. Install dependencies & build project
+# 3. Run linting
+# 4. Run unit tests
+#
+# USAGE
+#
+# NOTE: meant to be called by ./.github/workflows/on-pr-code-update.yml when a PR is opened or updated,
+# or by ./.github/workflows/make-release.yml when a release is made.
+#
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: dev
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - name: Setup NodeJS
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: "npm"
+      - name: Setup dependencies
+        uses: aws-powertools/actions/.github/actions/cached-node-modules@29979bc5339bf54f76a11ac36ff67701986bb0f0
+        with:
+          nodeVersion: 22
+      - name: Linting
+        run: npm run lint
+      - name: Unit tests
+        run: |
+          npm run test:unit:coverage
