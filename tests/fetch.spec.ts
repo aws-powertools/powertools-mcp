@@ -1,6 +1,6 @@
 import { CacheManager } from '../src/cacheManager.ts';
 import { it, expect, beforeEach, vi } from 'vitest';
-//import { FetchService } from './index';
+import { FetchService } from '../src/fetchService.ts';
 import type { CacheConfig } from '../src/types/fetchService.ts';
 import { ContentType } from '../src/constants.ts';
 import { defaults } from 'make-fetch-happen';
@@ -13,8 +13,6 @@ vi.mock('make-fetch-happen', () => ({
 // Mock CacheManager
 vi.mock('./cacheManager');
 
-let fetchService: FetchService;
-
 const mockConfig: CacheConfig = {
   basePath: '/tmp/cache',
   contentTypes: {
@@ -24,7 +22,7 @@ const mockConfig: CacheConfig = {
       cacheMode: 'force-cache',
       retries: 3,
     },
-    [ContentType.SEARCH_INDEX]: {
+    [ContentType.MARKDOWN]: {
       path: 'search-indexes',
       maxAge: 7200000,
       cacheMode: 'default',
@@ -49,7 +47,7 @@ mockCacheManager = {
 // Set up the mock to return our mockCacheManager
 (CacheManager as jest.Mock).mockImplementation(() => mockCacheManager);
 
-fetchService = new FetchService(mockConfig);
+const fetchService = new FetchService(mockConfig);
 
 beforeEach(() => {
   vi.clearAllMocks();

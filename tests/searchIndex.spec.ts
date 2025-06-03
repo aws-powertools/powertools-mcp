@@ -170,7 +170,6 @@ async function measureExecutionTime<T>(
 }
 
 const runtimes = ['python', 'typescript', 'java', 'dotnet'];
-const factory = new SearchIndexFactory();
 const initialMemory = getMemoryUsage();
 const memorySnapshots: Record<string, { heapUsed: number; heapTotal: number }> =
   {};
@@ -401,7 +400,7 @@ it('should handle invalid runtime gracefully', async () => {
   // Create a new factory for this test to avoid cached results
   const factory = new SearchIndexFactory();
 
-  const result = await factory.getIndex('invalid-runtime' as any);
+  const result = await factory.getIndex('invalid-runtime');
   expect(result).toBeUndefined();
   expect(console.error).toHaveBeenCalledWith(
     'Error loading search index for invalid-runtime: Not Found'
