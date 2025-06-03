@@ -1,11 +1,16 @@
 <div align="center">
-
+  
 ### ⚠️ EXPERIMENTAL PROJECT ⚠️
 [![Status](https://img.shields.io/badge/Status-Experimental-orange.svg)](https://shields.io/)
 [![Stability](https://img.shields.io/badge/Stability-Evolving-yellow.svg)](https://shields.io/)
+[![Discord](https://img.shields.io/badge/Discord-Join_Community-7289da.svg)](https://discord.gg/B8zZKbbyET)
 
 **This repository contains experimental code under active development.  
 APIs and features may change frequently without notice.**
+
+### 💡 Get Involved!
+**We're actively seeking community feedback and feature suggestions.**  
+[Join our Discord](https://discord.gg/B8zZKbbyET) | [Open an Issue](https://github.com/aws-powertools/powertools-mcp/issues/new/choose)
 
 ---
 </div>
