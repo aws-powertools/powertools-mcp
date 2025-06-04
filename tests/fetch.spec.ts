@@ -32,22 +32,20 @@ const mockConfig: CacheConfig = {
 };
 
 // Setup CacheManager mock with proper methods
-mockCacheManager = {
-  clearCache: jest.fn().mockResolvedValue(undefined),
-  clearAllCaches: jest.fn().mockResolvedValue(undefined),
-  getStats: jest.fn().mockResolvedValue({
+const mockCacheManager = {
+  clearCache: vi.fn().mockResolvedValue(undefined),
+  clearAllCaches: vi.fn().mockResolvedValue(undefined),
+  getStats: vi.fn().mockResolvedValue({
     size: 1000,
     entries: 10,
     oldestEntry: new Date(),
     newestEntry: new Date(),
   }),
-  clearOlderThan: jest.fn().mockResolvedValue(5),
+  clearOlderThan: vi.fn().mockResolvedValue(5),
 };
 
 // Set up the mock to return our mockCacheManager
-(CacheManager as jest.Mock).mockImplementation(() => mockCacheManager);
-
-const fetchService = new FetchService(mockConfig);
+// (CacheManager as jest.Mock).mockImplementation(() => mockCacheManager);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -71,7 +69,8 @@ it('should initialize with the correct configuration', () => {
 });
 
 it('should use explicit content type from options', async () => {
-  // Create mock fetch instances
+  // Prepare
+  const fetchService = new FetchService(mockConfig);
   const mockFetchInstances = new Map();
   const mockWebPageFetch = vi.fn().mockResolvedValue('web-page-response');
   const mockMarkdownFetch = vi.fn().mockResolvedValue('search-index-response');
@@ -80,7 +79,7 @@ it('should use explicit content type from options', async () => {
   mockFetchInstances.set(ContentType.MARKDOWN, mockMarkdownFetch);
 
   // Set the mock fetch instances
-  (fetchService as any).fetchInstances = mockFetchInstances;
+  fetchService.fetchInstances = mockFetchInstances;
 
   await fetchService.fetch('https://example.com', {
     contentType: ContentType.WEB_PAGE,

@@ -22,6 +22,8 @@ const POWERTOOLS_BASE_URL = 'https://docs.powertools.aws.dev/lambda';
 // Constants for performance tuning
 const FETCH_TIMEOUT_MS = 15000; // 15 seconds timeout for fetch operations
 
+const runtimes = ['java', 'dotnet', 'typescript', 'python'] as const;
+
 export {
   FOURTEEN_DAYS_MS,
   DEFAULT_CACHE_MODE,
@@ -32,5 +34,6 @@ export {
   ContentType,
   ALLOWED_DOMAIN,
   FETCH_TIMEOUT_MS,
+  runtimes,
   POWERTOOLS_BASE_URL,
 };

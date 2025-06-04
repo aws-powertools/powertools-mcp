@@ -7,11 +7,9 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
-import { POWERTOOLS_BASE_URL } from './constants.ts';
+import { POWERTOOLS_BASE_URL, runtimes } from './constants.ts';
 
-// Class managing the Search indexes for searching
 const searchIndexes = new SearchIndexFactory();
-const runtimes = ['java', 'dotnet', 'typescript', 'python'] as const;
 
 const searchDocsSchema = z.object({
   search: z.string().describe('what to search for'),
@@ -26,75 +24,61 @@ const fetchDocSchema = z.object({
   url: z.string().url(),
 });
 
-const server = new Server(
-  {
-    name: 'powertools-mcp-server',
-    version: '0.6.0', // TODO: synchronize this with package.json version
-  },
-  {
-    capabilities: {
-      tools: {},
+const listTools = async () => ({
+  tools: [
+    {
+      name: 'search_docs',
+      description:
+        'Search Powertools for AWS Lambda documentation to learn about Serverless best practices. ' +
+        "Try searching for features like 'Logger', 'Tracer', 'Metrics', 'Idempotency', 'batchProcessor', event handler, etc. " +
+        'Powertools is available for the following runtimes: python, typescript, java, dotnet. ' +
+        'When searching, always specify the version of Powertools you are interested in, if unsure, try to read it from the workspace configuration, otherwise use "latest".',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          search: {
+            type: 'string',
+            description: 'what to search for',
+          },
+          runtime: {
+            type: 'string',
+            enum: runtimes,
+            description: 'the runtime index to search',
+          },
+          version: {
+            type: 'string',
+            description: 'version is always semantic 3 digit in the form x.y.z',
+          },
+        },
+        required: ['search', 'runtime'],
+        additionalProperties: false,
+        $schema: 'http://json-schema.org/draft-07/schema#',
+      },
     },
-  }
-);
-
-// Set Tools List so LLM can get details on the tools and what they do
-server.setRequestHandler(ListToolsRequestSchema, async () => {
-  return {
-    tools: [
-      {
-        name: 'search_docs',
-        description:
-          'Search Powertools for AWS Lambda documentation to learn about Serverless best practices. ' +
-          "Try searching for features like 'Logger', 'Tracer', 'Metrics', 'Idempotency', 'batchProcessor', event handler, etc. " +
-          'Powertools is available for the following runtimes: python, typescript, java, dotnet. ' +
-          'You can ask whether a specific version of powertools is in use and pass that along with the search.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            search: {
-              type: 'string',
-              description: 'what to search for',
-            },
-            runtime: {
-              type: 'string',
-              enum: ['java', 'dotnet', 'typescript', 'python'],
-              description: 'the runtime index to search',
-            },
-            version: {
-              type: 'string',
-              description:
-                'version is always semantic 3 digit in the form x.y.z',
-            },
+    {
+      name: 'fetch_doc_page',
+      description:
+        'Fetches the content of a Powertools documentation page and returns it as markdown.' +
+        'Use this after finding relevant pages with search_docs to get detailed information.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          url: {
+            type: 'string',
+            format: 'uri',
           },
-          required: ['search', 'runtime'],
-          additionalProperties: false,
-          $schema: 'http://json-schema.org/draft-07/schema#',
         },
+        required: ['url'],
+        additionalProperties: false,
+        $schema: 'http://json-schema.org/draft-07/schema#',
       },
-      {
-        name: 'fetch_doc_page',
-        description:
-          'Fetches the content of a Powertools documentation page and returns it as markdown.' +
-          'Use this after finding relevant pages with search_docs to get detailed information.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            url: {
-              type: 'string',
-              format: 'uri',
-            },
-          },
-          required: ['url'],
-          additionalProperties: false,
-          $schema: 'http://json-schema.org/draft-07/schema#',
-        },
-      },
-    ],
-  };
+    },
+  ],
 });
 
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
+const toolCall = async (request: {
+  params: { name: string; arguments?: unknown };
+}) => {
   try {
     const { name, arguments: args } = request.params;
     logger.info(`Tool request: ${name}`, { tool: name, args });
@@ -231,13 +215,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const theError = error instanceof Error ? error : new Error(errorMessage);
-    logger.error('Error handling tool request', { error: theError });
+    logger.error('Error handling tool request', { error });
     return {
       content: [{ type: 'text', text: `Error: ${errorMessage}` }],
       isError: true,
     };
   }
-});
+};
 
-export { server };
+const server = new Server(
+  {
+    name: 'powertools-mcp-server',
+    version: '0.6.0', // TODO: synchronize this with package.json version
+  },
+  {
+    capabilities: {
+      tools: {}, // TODO: why are the tools not here?
+    },
+  }
+);
+server.setRequestHandler(ListToolsRequestSchema, listTools);
+server.setRequestHandler(CallToolRequestSchema, toolCall);
+
+export { server, listTools, toolCall };

@@ -8,7 +8,6 @@ import type {
   Response,
   ContentType,
 } from './types/fetchService.ts';
-import { defaults } from 'make-fetch-happen';
 import { cacheConfig } from './configs.ts';
 
 /**
@@ -58,7 +57,7 @@ class FetchService {
         // Create a fetch instance with the specified settings
         this.fetchInstances.set(
           contentType,
-          defaults({
+          /* defaults({
             cachePath: join(config.basePath, settings.path),
             retry: {
               retries: settings.retries || 3,
@@ -69,7 +68,8 @@ class FetchService {
             cache: settings.cacheMode || 'default',
             // Enable ETag and Last-Modified validation
             // cacheAdditionalHeaders: ['etag', 'last-modified'], TODO: see if we can use this, the type definition doesn't allow it but it was defined in the original code
-          })
+          }) */
+         fetch
         );
       }
     }
