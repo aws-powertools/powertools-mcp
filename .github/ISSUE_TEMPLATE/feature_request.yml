@@ -1,7 +1,8 @@
 name: Feature request
 description: Suggest an idea for the project
 title: "Feature request: TITLE"
-labels: ["feature-request", "triage"]
+labels: ["triage"]
+type: "Enhancement"
 body:
   - type: markdown
     attributes:
