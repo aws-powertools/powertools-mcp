@@ -2,7 +2,7 @@ name: Maintenance
 description: Suggest an activity to help address tech debt, governance, and anything internal
 title: "Maintenance: TITLE"
 labels: ["triage"]
-type: "Enhancement"
+type: "Task"
 body:
   - type: markdown
     attributes:
