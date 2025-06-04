@@ -155,11 +155,11 @@ Note that this repository is monitored and supported 24/7 by Amazon Security, se
 
 Review pull requests regularly, comment, suggest, reject, merge and close. Accept only high quality pull-requests. Provide code reviews and guidance on incoming pull requests.
 
-PRs are [labeled](#other-labels) based on status, content, and use semantic title. Pay attention to whether labels reflect the current state of the PR and correct accordingly.
+PRs are [labeled](#other-labels) based on status, content, and use semantic titles. Pay attention to whether labels reflect the current state of the PR and update accordingly.
 
-Use and enforce [semantic versioning](https://semver.org/) pull request titles, as these will be used for versioning and changelog, as well as [release notes](https://github.com/aws-powertools/powertools-mcp/releases) - make sure they communicate their intent at the human level.
+Use and enforce [semantic versioning](https://semver.org/) pull request titles, as these will be used for versioning and the changelog, as well as [release notes](https://github.com/aws-powertools/powertools-mcp/releases) - make sure they communicate their intent at the human level.
 
-For issues linked to a PR, make sure `pending-release` label is applied to them when merging. [Upon release](#releasing-a-new-version), these issues will be notified which release version contains their change.
+For issues linked to a PR, make sure `pending-release` label is applied to them when merging. [Upon release](#releasing-a-new-version), these issues will be updated with the release version that contains the changes in the PR.
 
 See [Common scenarios](#common-scenarios) section for additional guidance.
 
@@ -171,7 +171,7 @@ Make sure issues are categorized according to our [issue type definition](#issue
 
 Use our [labels](#other-labels) to signal good first issues to new community members, and to set expectation that this might need additional feedback from the author, other customers, experienced community members and/or maintainers.
 
-Be aware of [casual contributors](https://opensource.com/article/17/10/managing-casual-contributors) and recurring contributors. Provide the experience and attention you wish you had if you were starting in open source.
+Be aware of [casual contributors](https://opensource.com/article/17/10/managing-casual-contributors) and recurring contributors. Provide the experience and attention you wish you had when you were starting in open source.
 
 See [Common scenarios](#common-scenarios) section for additional guidance.
 
@@ -179,7 +179,7 @@ See [Common scenarios](#common-scenarios) section for additional guidance.
 
 Be familiar with [our definition of bug](#is-that-a-bug). If it's not a bug, you can close it or adjust its title and labels - always communicate the reason accordingly.
 
-For bugs caused by upstream dependencies, replace `bug` with `bug-upstream` label. Ask the author whether they'd like to raise the issue upstream or if they prefer us to do so.
+For bugs caused by upstream dependencies, replace `bug` with `bug-upstream` label. Ask the author whether they'd like to raise the issue upstream or if they would prefer us to do so.
 
 Assess the impact and make the call on whether we need an emergency release. Contact other [maintainers](#current-maintainers) when in doubt.
 
@@ -187,7 +187,7 @@ See [Common scenarios](#common-scenarios) section for additional guidance.
 
 ### Triage RFCs
 
-RFC is a collaborative process to help us get to the most optimal solution given the context. Their purpose is to ensure everyone understands what this context is, their trade-offs, and alternative solutions that were part of the research before implementation begins.
+An RFC is a collaborative process to help us get to the most optimal solution given the context. Their purpose is to ensure everyone understands what this context is, the trade-offs, and alternative solutions that were part of the research before implementation begins.
 
 Make sure you ask these questions in mind when reviewing:
 
@@ -195,11 +195,11 @@ Make sure you ask these questions in mind when reviewing:
 - Does the proposal address the use case? If so, is the recommended usage explicit?
 - Does it focus on the mechanics to solve the use case over fine-grained implementation details?
 - Can anyone familiar with the code base implement it?
-- If approved, are they interested in contributing? Do they need any guidance?
+- If approved, is the author interested in contributing? Do they need any guidance?
 - Does this significantly increase the overall project maintenance? Do we have the skills to maintain it?
 - If we can't take this use case, are there alternative projects we could recommend? Or does it call for a new project altogether?
 
-When necessary, be upfront that the time to review, approve, and implement a RFC can vary - see [Contribution is stuck](#contribution-is-stuck). Some RFCs may be further updated after implementation, as certain areas become clearer.
+When necessary, be upfront that the time to review, approve, and implement an RFC can vary - see [Contribution is stuck](#contribution-is-stuck). Some RFCs may be further updated after implementation, as certain areas become clearer.
 
 Here's an example of RFC with good engagement from the community: [aws-powertools/powertools-lambda-typescript#3500](https://github.com/aws-powertools/powertools-lambda-typescript/discussions/3500).
 
@@ -221,11 +221,11 @@ You'll notice we group all changes based on their [type](#issue-types) like `Enh
 Edit the respective PR title and update their labels. Then run the [Release Drafter workflow](https://github.com/aws-powertools/powertools-lambda-typescript/**actions**/workflows/release-drafter.yml) to update the Draft release.
 
 !!! note
-    This won't change the CHANGELOG as the merge commit is immutable. Don't worry about it. We'd only rewrite git history only if this can lead to confusion and we'd pair with another maintainer.
+    This won't change the CHANGELOG as the merge commit is immutable. Don't worry about it. We'd rewrite git history only if not doing so can lead to confusion and this should be done by pairing with another maintainer.
 
 **All looking good, what's next?**
 
-The best part comes now. Replace the placeholder `[Human readable summary of changes]` with what you'd like to communicate to customers what this release is all about. Rule of thumb: always put yourself in the customers shoes.
+The best part comes now. Replace the placeholder `[Human readable summary of changes]` with what you'd like to communicate to customers that this release is all about. Rule of thumb: always put yourself in the customers shoes.
 
 These are some questions to keep in mind when drafting your first or future release notes:
 
@@ -259,19 +259,19 @@ Actions that negatively impact the project will be handled by the admins, in coo
 
 ## Common scenarios
 
-These are recurring ambiguous situations that new and existing maintainers may encounter. They serve as guidance. It is up to each maintainer to follow, adjust, or handle in a different manner as long as [our conduct is consistent](#uphold-code-of-conduct)
+These are recurring ambiguous situations that new and existing maintainers may encounter. They serve as guidance. It is up to each maintainer to follow, adjust, or handle in an appropriate manner as long as [our conduct is consistent](#uphold-code-of-conduct)
 
 ### Contribution is stuck
 
-A contribution can get stuck often due to lack of bandwidth and language barrier. For bandwidth issues, check whether the author needs help. Make sure you get their permission before pushing code into their existing PR - do not create a new PR unless strictly necessary.
+A contribution can get stuck often due to lack of bandwidth and/or language barriers. For bandwidth issues, check whether the author needs help. Make sure you get their permission before pushing code into their existing PR - do not create a new PR unless strictly necessary.
 
-For language barrier and others, offer a 1:1 chat to get them unblocked. Often times, English might not be their primary language, and writing in public might put them off, or come across not the way they intended to be.
+In the case of a language barrier or other issues, offer a 1:1 chat to get them unblocked. Often times, English might not be their primary language, and writing in public might put them off, or come across not the way they intended to be.
 
-In other cases, you may have constrained capacity. Use `help-wanted` label when you want to signal other maintainers and external contributors that you could use a hand to move it forward.
+In some cases, you may have constrained capacity. Use the `help-wanted` label when you want to signal oto ther maintainers and external contributors that you could use a hand to move it forward.
 
 ### Insufficient feedback or information
 
-When in doubt, use `need-more-info` or `need-customer-feedback` labels to signal more context and feedback are necessary before proceeding. You can also use `revisit-in-3-months` label when you expect it might take a while to gather enough information before you can decide.
+When in doubt, use the `need-more-info` or `need-customer-feedback` labels to signal more context and feedback are necessary before proceeding. You can also use `revisit-in-3-months` label when you expect it might take a while to gather enough information before you can decide.
 
 Note that issues marked as `need-response` will be automatically closed after 3 weeks of inactivity.
 
@@ -295,4 +295,4 @@ Make use of `help-wanted` and `good-first-issue` to signal additional contributi
 
 Try offering a 1:1 call in the attempt to get to a mutual understanding and clarify areas that maintainers could help.
 
-In the rare cases where both parties don't have the bandwidth or expertise to continue, it's best to use the `on-hold` or `revisit-in-3-months` labels. After some time has passed, see if it's possible to break the PR or issue in smaller chunks, and eventually close if there is no progress.
+In the rare cases where both parties don't have the bandwidth or expertise to continue, it's best to use the `on-hold` or `revisit-in-3-months` labels. After some time has passed, see if it's possible to break the PR or issue into smaller chunks, and eventually close if there is no progress.
