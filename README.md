@@ -1,32 +1,33 @@
 # Powertools for AWS MCP Search Server
 
-The Powertools for AWS [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) Search Server is a server that provides search functionality for the Powertools for AWS Lambda documentation across multiple runtimes. It allows your LLM agents to search for documentation and examples related to the toolkit, helping you to quickly find the information you need to use Powertools for AWS Lambda effectively.
-
-<div align="center">
-  
-### ⚠️ EXPERIMENTAL PROJECT ⚠️
+![NodeSupport](https://img.shields.io/static/v1?label=node&message=%2022&color=green?style=flat-square&logo=node)
+![GitHub Release](https://img.shields.io/github/v/release/aws-powertools/powertools-lambda-typescript?style=flat-square)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/aws-powertools/powertools-mcp/badge)](https://api.securityscorecards.dev/projects/github.com/aws-powertools/powertools-mcp)
 [![Status](https://img.shields.io/badge/Status-Experimental-orange.svg)](https://shields.io/)
 [![Stability](https://img.shields.io/badge/Stability-Evolving-yellow.svg)](https://shields.io/)
 [![Discord](https://img.shields.io/badge/Discord-Join_Community-7289da.svg)](https://discord.gg/B8zZKbbyET)
 
-**This repository contains experimental code under active development.  
-APIs and features may change frequently without notice.**
+The Powertools for AWS [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) Search Server is a server that provides search functionality for the Powertools for AWS Lambda documentation across multiple runtimes. It allows your LLM agents to search for documentation and examples related to the toolkit, helping you to quickly find the information you need to use Powertools for AWS Lambda effectively.
 
-### 💡 Get Involved!
-**We're actively seeking community feedback and feature suggestions.**  
-[Join our Discord](https://discord.gg/B8zZKbbyET) | [Open an Issue](https://github.com/aws-powertools/powertools-mcp/issues/new/choose)
+> [!WARNING]
+> **This project is experimental and under active development.** APIs and features may change frequently without notice.
 
----
-</div>
+## 💡 Get Involved
+
+We're actively seeking community feedback and feature suggestions [join our Discord](https://discord.gg/B8zZKbbyET) or [open an issue](https://github.com/aws-powertools/powertools-mcp/issues/new/choose) to share your thoughts.
 
 ## Use Cases
 
 - Bring documentation and examples directly into your LLM agents' context.
 - Search for specific topics or keywords within the Powertools for AWS documentation.
 - Help your agents understand how to use the Powertools for AWS Lambda toolkit effectively.
+
 ## Getting Started
 
 Most clients that support MCP can use this server out of the box using a configuration similar to the following:
+
+> [!NOTE]
+> If you are using an older version of the MCP server, make sure to update your configuration to use the new package name
 
 ```json
 {
