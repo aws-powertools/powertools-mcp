@@ -1,6 +1,3 @@
-import { logger } from './logger.ts';
-import { fetchDocPage } from './docFetcher.ts';
-import { searchDocuments, SearchIndexFactory } from './searchIndex.ts';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
   CallToolRequestSchema,
@@ -8,6 +5,10 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { POWERTOOLS_BASE_URL, runtimes } from './constants.ts';
+import { fetchDocPage } from './docFetcher.ts';
+import { logger } from './logger.ts';
+import { SearchIndexFactory, searchDocuments } from './searchIndex.ts';
+import { VERSION } from './version.ts';
 
 const searchIndexes = new SearchIndexFactory();
 
@@ -225,8 +226,8 @@ const toolCall = async (request: {
 
 const server = new Server(
   {
-    name: 'powertools-mcp-server',
-    version: '0.6.0', // TODO: synchronize this with package.json version
+    name: 'powertools-for-aws-mcp',
+    version: VERSION,
   },
   {
     capabilities: {
