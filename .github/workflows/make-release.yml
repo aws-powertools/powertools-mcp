@@ -1,0 +1,86 @@
+name: Make Release
+
+# RELEASE PROCESS
+#
+# === Automated activities ===
+# 1. [Quality check] run unit tests and linting
+# 2. [Release] publish package to npmjs.org using the latest git commit, ensure provenance with NPM_CONFIG_PROVENANCE=true
+# 3. [Create tag] create a new git tag using released version, i.e. v1.13.1
+#
+# === Manual activities ===
+# 1. Kick off `make-version` workflow to bump and review the version changes and changelog for each package
+# 2. Merge the PR created by `make-version` workflow
+# 3. Kick off this workflow to make the release
+# 4. Update draft release notes with the latest changes and publish the release on GitHub
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: on-release-publish
+
+
+jobs:
+  # temporarily disabled until we address #48
+  # run-unit-tests:
+  #  uses: ./.github/workflows/reusable-code-quality.yml
+  # This job publishes the packages to npm.
+  # It uses the latest git commit sha as the version and ensures provenance with NPM_CONFIG_PROVENANCE flag.
+  # We don't bump the version because we do that in the `make-version` workflow.
+  # It also sets the RELEASE_VERSION output to be used by the next job to create a git tag.
+  publish-npm:
+    # needs: run-unit-tests // uncomment when we re-enable the unit tests #48
+    # Needed as recommended by npm docs on publishing with provenance https://docs.npmjs.com/generating-provenance-statements
+    permissions:
+      id-token: write
+    environment: Release
+    runs-on: ubuntu-latest
+    outputs:
+      RELEASE_VERSION: ${{ steps.set-release-version.outputs.RELEASE_VERSION }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+      - name: Setup auth tokens
+        run: |
+          npm set "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}"
+      - name: Setup dependencies
+        uses: aws-powertools/actions/.github/actions/cached-node-modules@29979bc5339bf54f76a11ac36ff67701986bb0f0
+      - name: Publish to npm
+        run: |
+          NPM_CONFIG_PROVENANCE=true npm publish --access public --registry https://registry.npmjs.org/
+      - name: Set release version
+        id: set-release-version
+        run: |
+          VERSION=$(cat lerna.json | jq .version -r)
+          echo RELEASE_VERSION="$VERSION" >> "$GITHUB_OUTPUT"
+  
+  # This job creates a new git tag using the released version (v1.18.1)
+  create_tag: 
+    needs: [publish-npm]
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+      - name: Git client setup
+        run: | 
+          git config --global user.name 'aws-powertools-bot'
+          git config --global user.email '151832416+aws-powertools-bot@users.noreply.github.com'
+          git config remote.origin.url >&-
+      - name: Create git tag
+        run : |
+          git tag -a v${{ needs.publish-npm.outputs.RELEASE_VERSION }} -m "Release v${{ needs.publish-npm.outputs.RELEASE_VERSION }}"
+          git push origin v${{ needs.publish-npm.outputs.RELEASE_VERSION }}
