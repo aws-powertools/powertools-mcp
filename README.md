@@ -7,7 +7,7 @@
 [![Stability](https://img.shields.io/badge/Stability-Evolving-yellow.svg)](https://shields.io/)
 [![Discord](https://img.shields.io/badge/Discord-Join_Community-7289da.svg)](https://discord.gg/B8zZKbbyET)
 
-The Powertools for AWS [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is a MCP implementation that provides search functionality for the Powertools for AWS Lambda documentation across multiple runtimes. It allows your LLM agents to search for documentation and examples related to the toolkit, helping you to quickly find the information you need to use Powertools for AWS Lambda effectively.
+The Powertools for AWS [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an MCP implementation that provides search functionality for the Powertools for AWS Lambda documentation across multiple runtimes. It allows your LLM agents to search for documentation and examples related to the toolkit, helping you to quickly find the information you need to use Powertools for AWS Lambda effectively.
 
 > [!WARNING]
 > **This project is experimental and under active development.** APIs and features may change frequently without notice.
