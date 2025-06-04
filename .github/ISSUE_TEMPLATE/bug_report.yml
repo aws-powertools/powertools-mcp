@@ -1,7 +1,8 @@
 name: Bug report
 description: Report a reproducible bug to help us improve
 title: "Bug: TITLE"
-labels: ["bug", "triage"]
+labels: ["triage"]
+type: "Bug"
 body:
   - type: markdown
     attributes:
@@ -21,17 +22,6 @@ body:
     attributes:
       label: Current Behavior
       description: Please share details on the current issue
-    validations:
-      required: true
-  - type: textarea
-    id: code_snippet
-    attributes:
-      label: Code snippet
-      description: Please share a code snippet to help us reproduce the issue
-      placeholder: |
-        ```typescript
-        some code here
-        ```
     validations:
       required: true
   - type: textarea
@@ -58,20 +48,9 @@ body:
     attributes:
       label: Powertools MCP version
       placeholder: "latest, 2.1.0"
-      value: latest
     validations:
       required: true
-  - type: dropdown
-    id: runtime
-    attributes:
-      label: AWS Lambda function runtime
-      options:
-        - 22.x
-        - 20.x
-        - 18.x
-    validations:
-      required: true
-  - type: input
+  - type: textarea
     id: environment
     attributes:
       label: Packaging format used
