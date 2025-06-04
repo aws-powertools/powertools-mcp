@@ -205,8 +205,13 @@ Here's an example of RFC with good engagement from the community: [aws-powertool
 
 ### Releasing a new version
 
-> [!note]
-> This section is a work in progress and will be updated as the project evolves - see [#57](https://github.com/aws-powertools/powertools-mcp/issues/57)
+Whenever a new version is ready to be released, follow these steps:
+
+1. Run the **Make Version** workflow to bump the version in the `package.json` file and update teh `CHANGELOG.md` file. This will create a new commit and open a pull request with the changes.
+2. Review the pull request, make sure the version is correct, and that the `CHANGELOG.md` file reflects the changes made in the new version. If necessary, update the pull request with amendments to the `CHANGELOG.md` file or version number.
+3. Once the pull request is approved, merge it into the `main` branch.
+4. Run teh **Make Release** workflow to create a new release. This will publish the new version to npm and create a new tag in the repository.
+5. Draft the release notes on the [Releases page](https://github.com/aws-powertools/powertools-mcp/releases) - see [Drafting release notes](#drafting-release-notes) for details.
 
 #### Drafting release notes
 
