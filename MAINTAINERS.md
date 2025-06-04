@@ -242,12 +242,6 @@ This will kick off the post-release automations and within a few minutes you sho
 
 Keep the `main` branch at production quality at all times. Backport features as needed. Create release branches and tags to enable future patches.
 
-### Manage Roadmap
-
-See [Roadmap section](https://docs.powertools.aws.dev/lambda/typescript/latest/roadmap/)
-
-Ensure the repo highlights features that should be elevated to the project roadmap. Be clear about the feature’s status, priority, target version, and whether or not it should be elevated to the roadmap.
-
 ### Add Continuous Integration Checks
 
 Add integration checks that validate pull requests and pushes to ease the burden on Pull Request reviewers. Continuously revisit areas of improvement to reduce operational burden in all parties involved.
