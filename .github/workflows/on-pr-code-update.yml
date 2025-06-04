@@ -1,0 +1,12 @@
+name: Code Quality
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  run-unit-tests:
+    uses: ./.github/workflows/reusable-code-quality.yml

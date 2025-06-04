@@ -1,0 +1,35 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories:
+      - "/"
+    labels: [ ]
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directories:
+      - "/"
+    labels: [ ]
+    schedule:
+      interval: daily
+    versioning-strategy: increase
+    groups:
+      aws-sdk-v3:
+        patterns:
+        - "@aws-sdk/*"
+        - "@smithy/*"
+      aws-cdk:
+        patterns:
+        - "@aws-cdk/toolkit-lib"
+        - "aws-cdk-lib"
+        - "aws-cdk"
+      typescript:
+        patterns:
+        - "typedoc"
+        - "typedoc-plugin-*"
+        - "typescript"
+      vitest:
+        patterns:
+        - "vitest"
+        - "@vitest/*"

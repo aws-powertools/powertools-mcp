@@ -1,32 +1,27 @@
-# Pull request
+## Summary
 
-## Changelog
+### Changes
 
-Please include a summary of the change and which issue is fixed. Include relevant motivation and context.
+> Please provide a summary of what's being changed
 
-Fixes # (issue)
+<!-- What is this PR solving? Write a clear description or reference the issue(s) it addresses. -->
 
-## Type of change
+> Please add the issue number below, if no issue is present the PR might get blocked and not be reviewed
 
-Please delete options that are not relevant.
+**Issue number:** 
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-- [ ] Test coverage improvement
+<!-------
+Before creating the pull request, please make sure you do the following:
 
-## How Has This Been Tested?
+- Read the Contributing Guidelines at https://github.com/aws-powertools/powertools-mcp/blob/main/CONTRIBUTING.md#sending-a-pull-request
+- Check that there isn't already a PR that addresses the same issue. If you find a duplicate, please leave a comment under the existing PR so we can discuss how to move forward
+- Add a PR title that follows the conventional commit semantics - https://github.com/aws-powertools/powertools-mcp/blob/main/.github/semantic.yml
+- If relevant, add tests that prove that the change is effective and works
+- Whenever relevant, make sure to comment functions/methods/types and make appropriate changes to the documentation
+------->
 
-Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce.
+---
 
-## Checklist
+By submitting this pull request, I confirm that you can use, modify, copy, and redistribute this contribution, under the terms of your choice.
 
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published in downstream modules
+**Disclaimer**: We value your time and bandwidth. As such, any pull requests created on non-triaged issues might not be successful.

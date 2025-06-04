@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Powertools MCP Repository
-    url: https://github.com/serverless-dna/powertools-mcp
-    about: Check the main repository for Powertools MCP
-  - name: GitHub Discussions
-    url: https://github.com/serverless-dna/powertools-mcp/discussions
-    about: Ask questions and discuss with other community members
+  - name: Ask a question
+    url: https://github.com/aws-powertools/powertools-mcp/discussions/new
+    about: Ask a general question about Powertools for AWS Lambda
+  - name: Join Community Discord Server
+    url: https://discord.gg/B8zZKbbyET
+    about: "Check out the #typescript channel"
