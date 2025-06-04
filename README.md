@@ -26,6 +26,9 @@ We're actively seeking community feedback and feature suggestions [join our Disc
 
 Most clients that support MCP can use this server out of the box using a configuration similar to the following:
 
+> [!NOTE]
+> If you are using an older version of the MCP server, make sure to update your configuration to use the new package name
+
 ```json
 {
   "mcpServers": {
