@@ -1,13 +1,13 @@
 # Maintainers Playbook
 
-Playbook for active maintainers of the proejct and new contributors.
+Playbook for active maintainers of the project and new contributors.
 
 ## Overview
 
 > [!Note]
 > This is a living document and will be updated as the project evolves.
 
-This is document explains who the maintainers are, their responsibilities, and how they should be doing it. If you're interested in contributing, see the [contributing](https://github.com/aws-powertools/powertools-mcp/blob/chore/main/CONTRIBUTING.md) document.
+This document explains who the maintainers are, their responsibilities, and how they should be doing it. If you're interested in contributing, see the [contributing](https://github.com/aws-powertools/powertools-mcp/blob/chore/main/CONTRIBUTING.md) document.
 
 ## Current Maintainers
 
@@ -119,7 +119,7 @@ These are some of the other labels that can be applied to issues and pull reques
 | Label                           | Usage                                                                                                                 |
 | ------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | not-a-bug                       | Issue is not a bug, but rather an intended behavior or a feature request.                                             |
-| help-wanted                     | Issue is looking for help from the community.                                                                         |
+| help-wanted                     | Issue is seeking help from the community.                                                                             |
 | good-first-issue                | Issue is a good first issue for new contributors.                                                                     |
 | bug-upstream                    | Issue is a bug in an upstream dependency and needs to be reported upstream.                                           |
 | need-issue                      | PR is missing a linked issue and might be closed if not addressed.                                                    |
@@ -240,7 +240,7 @@ This will kick off the post-release automations and within a few minutes you sho
 
 ### Maintain Overall Health of the Repo
 
-Keep the `main` branch at production quality at all times. Backport features as needed. Cut release branches and tags to enable future patches.
+Keep the `main` branch at production quality at all times. Backport features as needed. Create release branches and tags to enable future patches.
 
 ### Manage Roadmap
 
