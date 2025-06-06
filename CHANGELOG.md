@@ -1,3 +1,20 @@
+## v0.8.5
+
+[compare changes](https://github.com/aws-powertools/powertools-mcp/compare/v0.8.4...v0.8.5)
+
+### 🏡 Chore
+
+- Standardize repo ([#49](https://github.com/aws-powertools/powertools-mcp/pull/49))
+- Add experimental banner ([#44](https://github.com/aws-powertools/powertools-mcp/pull/44))
+- Enable CodeQL & add OSSF badge ([#56](https://github.com/aws-powertools/powertools-mcp/pull/56))
+- **deps-dev:** Bump the vitest group across 1 directory with 2 updates ([#51](https://github.com/aws-powertools/powertools-mcp/pull/51))
+- Add maintainers handbook ([#62](https://github.com/aws-powertools/powertools-mcp/pull/62))
+
+### 🤖 CI
+
+- Harden GitHub Actions ([#58](https://github.com/aws-powertools/powertools-mcp/pull/58))
+- Release workflows ([#63](https://github.com/aws-powertools/powertools-mcp/pull/63))
+
 ## [0.8.3](https://github.com/serverless-dna/powertools-mcp/compare/v0.8.2...v0.8.3) (2025-05-24)
 
 
