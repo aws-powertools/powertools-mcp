@@ -61,7 +61,7 @@ jobs:
       - name: Set release version
         id: set-release-version
         run: |
-          VERSION=$(cat lerna.json | jq .version -r)
+          VERSION=$(cat package.json | jq .version -r)
           echo RELEASE_VERSION="$VERSION" >> "$GITHUB_OUTPUT"
   
   # This job creates a new git tag using the released version (v1.18.1)
