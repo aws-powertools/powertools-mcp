@@ -3,7 +3,7 @@
   "version": "0.8.5",
   "description": "Powertools for AWS Lambda MCP Server",
   "bin": {
-    "powertools-mcp": "dist/index.js"
+    "powertools-mcp": "dist/index.cjs"
   },
   "files": [
     "dist/"
@@ -26,7 +26,7 @@
     "test:unit:coverage": "vitest --run tests/unit --coverage.enabled --coverage.thresholds.100 --coverage.include='src/**'",
     "prebuild": "rimraf dist/*",
     "build": "node esbuild.config.mjs",
-    "postbuild": "chmod +x dist/index.js",
+    "postbuild": "chmod +x dist/index.cjs",
     "lint": "biome lint .",
     "lint:fix": "biome check --write .",
     "dev": "npx @modelcontextprotocol/inspector node --experimental-transform-types src/index.ts"
