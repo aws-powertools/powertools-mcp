@@ -1,15 +1,14 @@
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
-import { cacheConfig } from './configs.ts';
-import { fetchService } from './fetchService.ts';
-import { ALLOWED_DOMAIN, ContentType, FETCH_TIMEOUT_MS } from './constants.ts';
-import { logger } from './logger.ts';
-import { NodeHtmlMarkdownConverter } from './markdown.ts';
 import {
-  put as writeToCache,
-  rm as removeFromCache,
   get as getFromCache,
+  rm as removeFromCache,
+  put as writeToCache,
 } from 'cacache';
+import { cacheConfig } from './configs.ts';
+import { ALLOWED_DOMAIN, ContentType, FETCH_TIMEOUT_MS } from './constants.ts';
+import { fetchService } from './fetchService.ts';
+import { logger } from './logger.ts';
 
 /**
  * Validates that a URL belongs to the allowed domain
@@ -136,21 +135,22 @@ async function saveMarkdownToCache(
  * @param url The URL of the documentation page to fetch
  * @returns The page content as markdown
  */
-export async function fetchDocPage(url: string): Promise<string> {
+export async function fetchDocPage(searchUrl: string): Promise<string> {
   try {
     // Validate URL for security
-    if (!isValidUrl(url)) {
+    if (!isValidUrl(searchUrl)) {
       throw new Error(
         `Invalid URL: Only URLs from ${ALLOWED_DOMAIN} are allowed`
       );
     }
+    const url = `${searchUrl}/index.md`;
 
     // Set up fetch options with timeout
     const fetchOptions = {
       timeout: FETCH_TIMEOUT_MS,
       contentType: ContentType.WEB_PAGE,
       headers: {
-        Accept: 'text/html',
+        Accept: 'text/markdown',
       },
     };
 
