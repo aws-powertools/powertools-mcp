@@ -1,5 +1,5 @@
 import { it, expect, beforeEach, vi } from 'vitest';
-import { listTools } from '../src/server.ts';
+import { listTools } from '../../src/server.ts';
 
 beforeEach(() => {
   vi.clearAllMocks();

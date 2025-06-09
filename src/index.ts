@@ -6,10 +6,10 @@ async function main() {
   const transport = new StdioServerTransport();
   logger.info('starting Powertools MCP Server');
   await server.connect(transport);
-  logger.info('Powertools Documentation MCP Server running on stdio');
+  logger.info('Powertools MCP Server running on stdio');
 }
 
 main().catch((error) => {
-  logger.error('Fatal error in main()', { error });
+  logger.error('Powertools MCP Fatal Error', { error });
   process.exit(1);
 });

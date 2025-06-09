@@ -23,13 +23,15 @@
     "setup:hooks": "husky",
     "test": "vitest --run tests/unit",
     "test:unit": "vitest --run tests/unit",
+    "test:e2e": "vitest --run tests/e2e",
     "test:unit:coverage": "vitest --run tests/unit --coverage.enabled --coverage.thresholds.100 --coverage.include='src/**'",
     "prebuild": "rimraf dist/*",
     "build": "node esbuild.config.mjs",
     "postbuild": "chmod +x dist/index.js",
     "lint": "biome lint .",
     "lint:fix": "biome check --write .",
-    "dev": "npx @modelcontextprotocol/inspector node --experimental-transform-types src/index.ts"
+    "dev": "npx @modelcontextprotocol/inspector node --experimental-transform-types src/index.ts",
+    "dev:build": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "type": "module",
   "keywords": [

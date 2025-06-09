@@ -1,5 +1,5 @@
 import { it, expect, beforeEach, vi } from 'vitest';
-import { searchDocuments, SearchIndexFactory } from '../src/searchIndex.ts';
+import { searchDocuments, SearchIndexFactory } from '../../src/searchIndex.ts';
 
 // Mock the fetch service
 jest.mock('./services/fetch', () => {

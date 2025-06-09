@@ -1,8 +1,8 @@
-import { CacheManager } from '../src/cacheManager.ts';
+import { CacheManager } from '../../src/cacheManager.ts';
 import { it, expect, beforeEach, vi } from 'vitest';
-import { FetchService } from '../src/fetchService.ts';
-import type { CacheConfig } from '../src/types/fetchService.ts';
-import { ContentType } from '../src/constants.ts';
+import { FetchService } from '../../src/fetchService.ts';
+import type { CacheConfig } from '../../src/types/fetchService.ts';
+import { ContentType } from '../../src/constants.ts';
 import { defaults } from 'make-fetch-happen';
 
 // Mock make-fetch-happen

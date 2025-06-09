@@ -1,6 +1,6 @@
 import { it, expect, beforeEach, vi } from 'vitest';
-import { ContentType } from '../src/constants.ts';
-import { clearDocCache, fetchDocPage } from '../src/docFetcher.ts';
+import { ContentType } from '../../src/constants.ts';
+import { clearDocCache, fetchDocPage } from '../../src/docFetcher.ts';
 
 const mocks = vi.hoisted(() => ({
   rmAll: vi.fn(),
@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('../src/fetchService.ts', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../src/fetchService.ts')>()),
+  ...(await importOriginal<typeof import('../../src/fetchService.ts')>()),
   fetchService: {
     fetch: mocks.fetch,
     clearCache: mocks.clearCache,
