@@ -9,7 +9,7 @@ async function runBuild() {
       target: 'node22',
       outdir: 'dist',
       sourcemap: true,
-      minify: false,
+      minify: true,
       banner: {
         js: `#!/usr/bin/env node
 import { createRequire } from 'module';const require = createRequire(import.meta.url);`,
