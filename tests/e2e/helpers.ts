@@ -34,23 +34,23 @@ class StdioServer {
    * It resolves when the server is listening on `stdio`.
    */
   public async start() {
-    await new Promise<void>((resolve, reject) => {
-      const onLine = (line: string) => {
-        if (line.includes('Powertools MCP Server running on stdio')) {
-          this.#inputReader.off('line', onLine);
-          resolve();
+    await Promise.race([
+      (async () => {
+        for await (const line of this.#inputReader) {
+          if (line.includes('Powertools MCP Server running on stdio')) {
+            return;
+          }
+          if (line.includes('Powertools MCP Fatal Error')) {
+            throw new Error(`MCP Server error: ${line}`);
+          }
         }
-        if (line.includes('Powertools MCP Fatal Error')) {
-          this.#inputReader.off('line', onLine);
-          reject(new Error(`MCP Server error: ${line}`));
-        }
-      };
-      this.#inputReader.on('line', onLine);
-      setTimeout(() => {
-        this.#inputReader.off('line', onLine);
-        reject(new Error('server start timeout'));
-      }, this.#requestTimeout);
-    });
+      })(),
+      new Promise<void>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('MCP Server start timeout'));
+        }, this.#requestTimeout);
+      }),
+    ]);
   }
 
   /**
