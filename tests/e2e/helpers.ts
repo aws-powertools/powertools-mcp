@@ -93,29 +93,31 @@ class StdioServer {
     params?: Record<string, unknown>;
   }): Promise<T> {
     const { id, method, params = {} } = props;
-    return new Promise<T>((resolve, reject) => {
-      const req = { jsonrpc: '2.0', id, method, params };
-      this.#process.stdin.write(`${JSON.stringify(req)}\n`);
+    const req = { jsonrpc: '2.0', id, method, params };
+    this.#process.stdin.write(`${JSON.stringify(req)}\n`);
 
-      const onLine = (line: string) => {
-        let obj: unknown;
-        try {
-          obj = JSON.parse(line);
-        } catch {
-          return;
-        }
-        if ((obj as { id: number }).id === id) {
-          this.#inputReader.off('line', onLine);
-          resolve((obj as { result: T }).result);
-        }
-      };
-      this.#inputReader.on('line', onLine);
-
-      setTimeout(() => {
-        this.#inputReader.off('line', onLine);
-        reject(new Error(`request ${id} timeout`));
-      }, this.#requestTimeout);
-    });
+    return await Promise.race([
+      new Promise<T>((resolve) => {
+        const onLine = (line: string) => {
+          let obj: unknown;
+          try {
+            obj = JSON.parse(line);
+          } catch {
+            return;
+          }
+          if ((obj as { id: number }).id === id) {
+            this.#inputReader.off('line', onLine);
+            resolve((obj as { result: T }).result);
+          }
+        };
+        this.#inputReader.on('line', onLine);
+      }),
+      new Promise<T>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error(`request ${id} timeout`));
+        }, this.#requestTimeout);
+      }),
+    ]);
   }
 }
 
