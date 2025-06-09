@@ -10,3 +10,5 @@ permissions:
 jobs:
   run-unit-tests:
     uses: ./.github/workflows/reusable-code-quality.yml
+  run-e2e-tests:
+    uses: ./.github/workflows/reusable-e2e.yml

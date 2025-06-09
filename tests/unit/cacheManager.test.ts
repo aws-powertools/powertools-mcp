@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { CacheManager } from '../src/cacheManager.ts';
-import type { CacheConfig, ContentType } from '../src/types/fetchService.ts';
-import { ContentType as ContentTypeMap } from '../src/constants.ts';
+import { CacheManager } from '../../src/cacheManager.ts';
+import type { CacheConfig, ContentType } from '../../src/types/fetchService.ts';
+import { ContentType as ContentTypeMap } from '../../src/constants.ts';
 
 const mocks = vi.hoisted(() => ({
   access: vi.fn(),

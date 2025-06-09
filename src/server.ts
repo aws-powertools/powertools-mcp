@@ -224,18 +224,22 @@ const toolCall = async (request: {
   }
 };
 
-const server = new Server(
-  {
-    name: 'powertools-for-aws-mcp',
-    version: VERSION,
-  },
-  {
-    capabilities: {
-      tools: {}, // TODO: why are the tools not here?
+const createServer = () => {
+  const server = new Server(
+    {
+      name: 'powertools-for-aws-mcp',
+      version: VERSION,
     },
-  }
-);
-server.setRequestHandler(ListToolsRequestSchema, listTools);
-server.setRequestHandler(CallToolRequestSchema, toolCall);
+    {
+      capabilities: {
+        tools: {}, // TODO: why are the tools not here?
+      },
+    }
+  );
+  server.setRequestHandler(ListToolsRequestSchema, listTools);
+  server.setRequestHandler(CallToolRequestSchema, toolCall);
 
-export { server, listTools, toolCall };
+  return server;
+};
+
+export { createServer, listTools, toolCall };

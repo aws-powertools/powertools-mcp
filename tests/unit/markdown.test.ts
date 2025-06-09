@@ -1,5 +1,5 @@
 import { it, expect } from 'vitest';
-import { NodeHtmlMarkdownConverter } from '../src/markdown.ts';
+import { NodeHtmlMarkdownConverter } from '../../src/markdown.ts';
 
 it('extracts title from h1 tag', () => {
   // Prepare

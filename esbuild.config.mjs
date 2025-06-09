@@ -11,8 +11,10 @@ async function runBuild() {
       sourcemap: true,
       minify: true,
       banner: {
-        js: '#!/usr/bin/env node',
+        js: `#!/usr/bin/env node
+import { createRequire } from 'module';const require = createRequire(import.meta.url);`,
       },
+      format: 'esm',
       // We're bundling everything for a standalone executable
       external: [],
     });
