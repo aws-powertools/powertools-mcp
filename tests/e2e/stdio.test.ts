@@ -1,4 +1,5 @@
-import { describe, it, beforeAll, afterAll, expect } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { POWERTOOLS_BASE_URL } from '../../src/constants.ts';
 import { StdioServer } from '../e2e/helpers.ts';
 
 describe('MCP Server e2e (child process)', () => {
@@ -67,7 +68,7 @@ describe('MCP Server e2e (child process)', () => {
       params: {
         name: 'fetch_doc_page',
         arguments: {
-          url: 'https://docs.powertools.aws.dev/lambda/typescript/latest/features/metrics/',
+          url: `${POWERTOOLS_BASE_URL}/typescript/latest/features/metrics/`,
         },
       },
     });
