@@ -1,4 +1,4 @@
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import readline from 'node:readline';
 
 /**
@@ -17,7 +17,7 @@ class StdioServer {
   }) {
     const cmd = options?.cmd ?? 'node';
     const args = options?.args ?? ['dist/index.js'];
-    this.#requestTimeout = process.env.CI ? 5000 : 1000_0000; // 1000 seconds in non-CI environments
+    this.#requestTimeout = process.env.CI ? 5000 : 1_000_000; // 1000 seconds in non-CI environments
 
     this.#process = spawn(cmd, args, {
       stdio: ['pipe', 'pipe', 'pipe'],
