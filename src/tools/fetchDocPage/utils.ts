@@ -1,12 +1,6 @@
 import { FETCH_TIMEOUT_MS } from '../../constants.ts';
 import { logger } from '../../logger.ts';
 
-const getTimeout = (abortController: AbortController) =>
-  setTimeout(() => {
-    /* v8 ignore next */
-    abortController.abort();
-  }, FETCH_TIMEOUT_MS);
-
 /**
  * Get the content of a remote documentation page.
  *
@@ -15,15 +9,13 @@ const getTimeout = (abortController: AbortController) =>
 const getRemotePage = async (
   url: URL
 ): Promise<{ markdown: string; eTag: string | null }> => {
-  const abortController = new AbortController();
-  const timeoutId = getTimeout(abortController);
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
         Accept: 'text/markdown',
       },
-      signal: abortController.signal,
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
     if (!response.ok) {
       throw new Error(
@@ -47,10 +39,6 @@ const getRemotePage = async (
     throw new Error('Failed to fetch remote page', {
       cause: error,
     });
-    /* v8 ignore start */
-  } finally {
-    /* v8 ignore end */
-    clearTimeout(timeoutId);
   }
 };
 
@@ -60,15 +48,13 @@ const getRemotePage = async (
  * @param url - The URL of the remote documentation page to fetch the ETag from.
  */
 const getRemotePageETag = async (url: URL): Promise<string | null> => {
-  const abortController = new AbortController();
-  const timeoutId = getTimeout(abortController);
   try {
     const response = await fetch(url, {
       method: 'HEAD',
       headers: {
         Accept: 'text/markdown',
       },
-      signal: abortController.signal,
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
     if (!response.ok) {
       throw new Error(
@@ -87,10 +73,6 @@ const getRemotePageETag = async (url: URL): Promise<string | null> => {
     throw new Error('Failed to fetch remote page eTag', {
       cause: error,
     });
-    /* v8 ignore start */
-  } finally {
-    /* v8 ignore end */
-    clearTimeout(timeoutId);
   }
 };
 

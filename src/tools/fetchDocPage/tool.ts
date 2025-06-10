@@ -7,15 +7,9 @@ import { CACHE_BASE_PATH } from '../../constants.ts';
 import { logger } from '../../logger.ts';
 import { buildResponse } from '../shared/buildResponse.ts';
 import { name as toolName } from './constants.ts';
+import { CacheError } from './errors.ts';
 import type { schema } from './schemas.ts';
 import { generateCacheKey, getRemotePage, getRemotePageETag } from './utils.ts';
-
-class CacheError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'CacheError';
-  }
-}
 
 /**
  * Fetch a documentation page from remote or local cache.
