@@ -18,9 +18,9 @@ The `fetchDocPage` tool fetches complete documentation pages from AWS Lambda Pow
 
 ### Required Parameters
 
-| Parameter | Type     | Description                             | Example                                                              |
-| --------- | -------- | --------------------------------------- | -------------------------------------------------------------------- |
-| `url`     | `string` | Valid Powertools documentation page URL | `"https://docs.powertools.aws.dev/lambda/python/2.1.0/core/logger/"` |
+| Parameter | Type     | Description                                     | Example                                                              |
+| --------- | -------- | ----------------------------------------------- | -------------------------------------------------------------------- |
+| `url`     | `string` | Valid Powertools for AWS documentation page URL | `"https://docs.powertools.aws.dev/lambda/python/2.1.0/core/logger/"` |
 
 ### URL Validation Rules
 
@@ -29,7 +29,7 @@ The tool enforces strict URL validation to ensure security and compatibility:
 1. **Domain Restriction**: Must be from `docs.powertools.aws.dev`
 2. **Runtime Validation**: Must include a valid runtime (`python`, `typescript`, `java`, `dotnet`)
 3. **Version Format**: Must be semantic version (x.y.z) or `"latest"`
-4. **Path Structure**: Must follow Powertools documentation URL structure
+4. **Path Structure**: Must follow Powertools for AWS documentation URL structure
 
 ### URL Transformation
 
@@ -172,7 +172,7 @@ Key: python/2.1.0/core/logger/index.md
   "content": [
     {
       "type": "text",
-      "text": "# Logger\n\nThe Logger utility provides a custom logging handler that formats logs according to AWS Lambda Powertools logging guidelines...\n\n## Installation\n\n```python\npip install aws-lambda-powertools[logger]\n```\n\n## Quick Start\n\n```python\nfrom aws_lambda_powertools import Logger\n\nlogger = Logger()\n\n@logger.inject_lambda_context\ndef lambda_handler(event, context):\n    logger.info(\"Processing request\")\n    return {\"statusCode\": 200}\n```"
+      "text": "# Logger\n\nThe Logger utility provides a custom logging handler that formats logs according to Powertools for AWS Lambda logging guidelines...\n\n## Installation\n\n```python\npip install aws-lambda-powertools[logger]\n```\n\n## Quick Start\n\n```python\nfrom aws_lambda_powertools import Logger\n\nlogger = Logger()\n\n@logger.inject_lambda_context\ndef lambda_handler(event, context):\n    logger.info(\"Processing request\")\n    return {\"statusCode\": 200}\n```"
     }
   ]
 }
@@ -197,7 +197,7 @@ Key: python/2.1.0/core/logger/index.md
 ### Security Features
 
 1. **Domain Allowlist**: Only `docs.powertools.aws.dev` is permitted
-2. **Runtime Validation**: Ensures valid Powertools runtime specification
+2. **Runtime Validation**: Ensures valid Powertools for AWS runtime specification
 3. **Version Validation**: Enforces semantic versioning or "latest" keyword
 4. **URL Sanitization**: Removes trailing slashes and normalizes paths
 5. **Request Timeout**: 15-second timeout prevents hanging connections
