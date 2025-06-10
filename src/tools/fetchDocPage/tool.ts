@@ -9,7 +9,7 @@ import { buildResponse } from '../shared/buildResponse.ts';
 import { name as toolName } from './constants.ts';
 import { CacheError } from './errors.ts';
 import type { schema } from './schemas.ts';
-import { generateCacheKey, getRemotePage, getRemotePageETag } from './utils.ts';
+import { getRemotePage, getRemotePageETag } from './utils.ts';
 
 /**
  * Fetch a documentation page from remote or local cache.
@@ -37,7 +37,7 @@ const tool = async (props: {
   logger.appendKeys({ url: url.toString() });
 
   const cachePath = join(CACHE_BASE_PATH, 'markdown-cache');
-  const cacheKey = generateCacheKey({ url });
+  const cacheKey = url.pathname;
   logger.debug('Generated cache key', { cacheKey });
 
   try {

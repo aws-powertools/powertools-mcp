@@ -12,7 +12,6 @@ import {
 import { POWERTOOLS_BASE_URL } from '../../src/constants.ts';
 import { schema, tool } from '../../src/tools/fetchDocPage/index.ts';
 import {
-  generateCacheKey,
   getRemotePage,
   getRemotePageETag,
 } from '../../src/tools/fetchDocPage/utils.ts';
@@ -37,6 +36,10 @@ describe('schema', () => {
     {
       type: 'semver',
       url: `${POWERTOOLS_BASE_URL}/typescript/1.2.4/features/metrics/`,
+    },
+    {
+      type: 'dotnet no version',
+      url: `${POWERTOOLS_BASE_URL}/dotnet/features/metrics/`,
     },
   ])('parses a valid URL ($type)', ({ url }) => {
     // Act
@@ -282,21 +285,6 @@ describe('utils', () => {
       );
     });
   });
-
-  describe('generateCacheKey', () => {
-    it('generates a cache key based on the URL', () => {
-      // Prepare
-      const url = new URL(
-        `${POWERTOOLS_BASE_URL}/typescript/latest/features/metrics/index.md`
-      );
-
-      // Act
-      const cacheKey = generateCacheKey({ url });
-
-      // Assess
-      expect(cacheKey).toBe('typescript/latest/features/metrics/index.md');
-    });
-  });
 });
 
 describe('tool', () => {
@@ -358,7 +346,7 @@ describe('tool', () => {
       data: Buffer.from(expectedContent),
     });
     const url = new URL(`${baseUrl}metrics/index.md`);
-    const cacheKey = generateCacheKey({ url });
+    const cacheKey = url.pathname;
 
     // Act
     const result = await tool({ url });
@@ -387,7 +375,7 @@ describe('tool', () => {
     // Prepare
     mocks.getFromCache.mockRejectedValueOnce(new Error('Cache miss'));
     const url = new URL(`${baseUrl}no-etag-for-some-reason.md`);
-    const cacheKey = generateCacheKey({ url });
+    const cacheKey = url.pathname;
 
     // Act
     const result = await tool({ url });
@@ -413,7 +401,7 @@ describe('tool', () => {
       data: Buffer.from('54321'),
     });
     const url = new URL(`${baseUrl}metrics/index.md`);
-    const cacheKey = generateCacheKey({ url });
+    const cacheKey = url.pathname;
     const expectedContent =
       'Metrics is a feature of PowerTools for TypeScript.';
 
@@ -453,7 +441,7 @@ describe('tool', () => {
     });
     mocks.getFromCache.mockRejectedValueOnce(new Error('Cache miss'));
     const url = new URL(`${baseUrl}metrics/index.md`);
-    const cacheKey = generateCacheKey({ url });
+    const cacheKey = url.pathname;
     const expectedContent =
       'Metrics is a feature of PowerTools for TypeScript.';
 
