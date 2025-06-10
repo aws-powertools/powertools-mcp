@@ -3,16 +3,24 @@ import { get as getFromCache, put as writeToCache } from 'cacache';
 import { CACHE_BASE_PATH, FETCH_TIMEOUT_MS } from '../../constants.ts';
 import { logger } from '../../logger.ts';
 
-type FetchProps = { url: URL; contentType: string; method: 'GET' | 'HEAD' };
+type FetchProps<T extends 'GET' | 'HEAD' = 'GET' | 'HEAD'> = {
+  url: URL;
+  contentType: string;
+  method: T;
+};
+
+type FetchResult<T extends 'GET' | 'HEAD'> = T extends 'GET'
+  ? { content: string; eTag: string | null }
+  : { content: undefined; eTag: string | null };
 
 /**
  * Get the ETag of a remote documentation page.
  *
  * @param url - The URL of the remote documentation page to fetch the ETag from.
  */
-const fetchFromRemote = async (
-  props: FetchProps
-): Promise<{ content?: string; eTag: string | null }> => {
+const fetchFromRemote = async <T extends 'GET' | 'HEAD'>(
+  props: FetchProps<T>
+): Promise<FetchResult<T>> => {
   const { url, contentType, method } = props;
   try {
     const response = await fetch(url, {
@@ -36,9 +44,12 @@ const fetchFromRemote = async (
       return {
         content: await response.text(),
         eTag: cleanETag,
-      };
+      } as FetchResult<T>;
     }
-    return { eTag: cleanETag };
+    return {
+      content: undefined,
+      eTag: cleanETag,
+    } as FetchResult<T>;
   } catch (error) {
     logger.error('Failed to fetch remote resource', { error });
     throw new Error('Failed to fetch remote resource', {
@@ -75,7 +86,9 @@ class CacheError extends Error {
  * @param props - options for fetching a resource
  * @param props.url - the URL of the resource to fetch
  */
-const fetchWithCache = async (props: Omit<FetchProps, 'method'>) => {
+const fetchWithCache = async (
+  props: Omit<FetchProps<'GET'>, 'method'>
+): Promise<string> => {
   const cachePath = CACHE_BASE_PATH;
   const cacheKey = props.url.pathname;
   logger.debug('Generated cache key', { cacheKey });

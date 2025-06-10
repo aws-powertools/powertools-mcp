@@ -1,102 +1,106 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { POWERTOOLS_BASE_URL, runtimes } from '../../constants.ts';
+import lunr from 'lunr';
+import {
+  POWERTOOLS_BASE_URL,
+  SEARCH_CONFIDENCE_THRESHOLD,
+} from '../../constants.ts';
 import { logger } from '../../logger.ts';
 import { buildResponse } from '../shared/buildResponse.ts';
-import { SearchIndexFactory, searchDocuments } from './searchIndex.ts';
+import { fetchWithCache } from '../shared/fetchWithCache.ts';
 import type { ToolProps } from './types.ts';
 
-const searchIndexes = new SearchIndexFactory();
+/**
+ * Search for documentation based on the provided parameters.
+ *
+ * This tool fetches a search index from the Powertools for AWS documentation,
+ * hydrates it into a Lunr index, and performs a search based on the provided query.
+ *
+ * The search index is expected to be in a specific format, and the results
+ * are filtered based on a confidence threshold to ensure relevance. The threshold
+ * can be configured via the `SEARCH_CONFIDENCE_THRESHOLD` environment variable.
+ *
+ * This tool is designed to work with the Powertools for AWS documentation
+ * for various runtimes, including Python and TypeScript, and supports versioning.
+ *
+ * Search indexes are fetched from a remote source and cached locally
+ * using the {@link fetchWithCache | `fetchWithCache`} utility to improve performance and reduce network calls.
+ *
+ * @param props - options for searching documentation
+ * @param props.search - the search query to use
+ * @param props.runtime - the runtime to search in (e.g., 'python', 'typescript')
+ * @param props.version - the version of the runtime to search in (e.g., 'latest', '1.0.0')
+ */
+const tool = async (props: ToolProps): Promise<CallToolResult> => {
+  const { search, runtime, version } = props;
+  logger.appendKeys({ tool: 'searchDocs' });
+  logger.appendKeys({ search, runtime, version });
 
-const tool = async ({
-  search,
-  runtime,
-  version,
-}: ToolProps): Promise<CallToolResult> => {
+  const urlParts =
+    runtime === 'python' || runtime === 'typescript'
+      ? [runtime, version]
+      : [runtime];
+  const baseUrl = `${POWERTOOLS_BASE_URL}/${urlParts.join('/')}`;
+  const url = new URL(baseUrl);
+  const urlSuffix = '/search/search_index.json';
+  url.pathname = `${url.pathname}${urlSuffix}`;
+
+  let searchIndexContent: {
+    docs: { location: string; title: string; text: string }[];
+  };
   try {
-    // First, check if the version is valid
-    const versionInfo = await searchIndexes.resolveVersion(runtime, version);
-    if (!versionInfo.valid) {
-      // Return an error with available versions
-      const availableVersions =
-        versionInfo.available?.map((v) => v.version) || [];
-
-      return buildResponse({
-        content: JSON.stringify({
-          error: `Invalid version: ${version} for runtime: ${runtime}`,
-          availableVersions,
-        }),
-        isError: true,
-      });
-    }
-
-    // do the search
-    const idx = await searchIndexes.getIndex(runtime, version);
-    if (!idx) {
-      // If we get here, it's likely an invalid runtime since version validation already happened
-      logger.warn(`Invalid runtime: ${runtime}`);
-
-      return buildResponse({
-        content: JSON.stringify({
-          error: `Invalid runtime: ${runtime}`,
-          availableRuntimes: runtimes,
-        }),
-        isError: true,
-      });
-    }
-    if (!idx.index || !idx.documents) {
-      logger.warn(`Invalid index for runtime: ${runtime}, version: ${version}`);
-      return buildResponse({
-        content: JSON.stringify({
-          error: `Invalid index for runtime: ${runtime}, version: ${version}`,
-          suggestion:
-            "Try using 'latest' version or check network connectivity",
-        }),
-        isError: true,
-      });
-    }
-
-    // Use the searchDocuments function to get enhanced results
-    logger.info(
-      `Searching for "${search}" in ${runtime} ${version} (resolved to ${idx.version})`
-    );
-    const results = searchDocuments(idx.index, idx.documents, search);
-    logger.info(`Search results for "${search}" in ${runtime}`, {
-      results: results.length,
+    const content = await fetchWithCache({
+      url,
+      contentType: 'application/json',
     });
-
-    // Format results for better readability
-    const formattedResults = results.map((result) => {
-      // Python and TypeScript include version in URL, Java and .NET don't
-      let url: string;
-      if (runtime === 'python' || runtime === 'typescript') {
-        url = `${POWERTOOLS_BASE_URL}/${runtime}/${idx.version}/${result.ref}`;
-      } else {
-        // For Java and .NET, no version in URL
-        url = `${POWERTOOLS_BASE_URL}/${runtime}/${result.ref}`;
-      }
-
-      return {
-        title: result.title,
-        url,
-        score: result.score,
-        snippet: result.snippet, // Use the pre-truncated snippet
-      };
-    });
-
-    return {
-      content: [{ type: 'text', text: JSON.stringify(formattedResults) }],
-    };
+    searchIndexContent = JSON.parse(content);
+    if (!('docs' in searchIndexContent)) {
+      throw new Error(
+        `Invalid search index format for ${runtime} ${version}: missing 'docs' property`
+      );
+    }
   } catch (error) {
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : `Unexpected error: ${String(error)}`;
-    logger.error('Error handling tool request', { error });
-    return {
-      content: [{ type: 'text', text: `Error: ${errorMessage}` }],
+    logger.error('Failed to fetch search index', {
+      error: (error as Error).message,
+    });
+    return buildResponse({
+      content: `Failed to fetch search index for ${runtime} ${version}: ${(error as Error).message}`,
       isError: true,
-    };
+    });
   }
+
+  // TODO: consume built/exported search index - #79
+  const index = lunr(function () {
+    this.ref('location');
+    this.field('title', { boost: 10 });
+    this.field('text');
+
+    for (const doc of searchIndexContent.docs) {
+      if (!doc.location || !doc.title || !doc.text) continue;
+
+      this.add({
+        location: doc.location,
+        title: doc.title,
+        text: doc.text,
+      });
+    }
+  });
+
+  const results = [];
+  for (const result of index.search(search)) {
+    if (result.score < SEARCH_CONFIDENCE_THRESHOLD) break; // Results are sorted by score, so we can stop early
+    results.push({
+      location: `${baseUrl}/${result.ref}`,
+      score: result.score,
+    });
+  }
+
+  logger.debug(
+    `Search results with confidence >= ${SEARCH_CONFIDENCE_THRESHOLD} found: ${results.length}`
+  );
+
+  return buildResponse({
+    content: results,
+  });
 };
 
 export { tool };

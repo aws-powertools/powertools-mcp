@@ -67,7 +67,7 @@ expect.extend({
     if (
       received.some(
         (item: CallToolResult) =>
-          item.type === 'text' && (item.text as string).includes(textContent)
+          item.type === 'text' && (item.text as string) === textContent
       )
     ) {
       return {
@@ -79,8 +79,44 @@ expect.extend({
     return {
       message: () => `Expected response to contain text: ${textContent}`,
       pass: false,
-      actual: received.content,
+      actual: received,
       expected: textContent,
+    };
+  },
+  toHaveNthResultWith(received, nth, expected) {
+    let parsedReceived: Record<string, unknown>[];
+    try {
+      parsedReceived = JSON.parse(received[0].text);
+    } catch (error) {
+      return {
+        message: () => 'Response text is not valid JSON',
+        pass: false,
+        actual: received.text,
+        expected: 'Valid JSON',
+      };
+    }
+
+    const result = parsedReceived[nth - 1];
+    if (!result) {
+      return {
+        message: () => `Expected response to have a result at index ${nth - 1}`,
+        pass: false,
+        actual: 'No result found at index',
+        expected,
+      };
+    }
+    if (this.equals(result, expected)) {
+      return {
+        message: () => '',
+        pass: true,
+      };
+    }
+
+    return {
+      message: () => 'Expected response to have the provided result',
+      pass: false,
+      actual: result,
+      expected,
     };
   },
 });
@@ -132,8 +168,27 @@ declare module 'vitest' {
      * ```ts
      * expect(response).toBeResponseWithText('Hello, world!');
      * ```
+     *
+     * @param content - The expected text content or object to check in the response
      */
     toBeResponseWithText(content: string | Record<string, unknown>): void;
+    /**
+     * Assesss that the response contains the expected result object at the nth position.
+     *
+     * @example
+     * ```ts
+     * expect(response).toHaveNthResultWith(
+     *   1,
+     *   expect.objectContaining({
+     *     key: 'value',
+     *   })
+     * );
+     *```
+     *
+     * @param nth - The index of the result to check (1-based index)
+     * @param expected - The expected result object
+     */
+    toHaveNthResultWith(nth: number, expected: Record<string, unknown>): void;
   }
 }
 
