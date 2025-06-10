@@ -84,7 +84,7 @@ graph TD
 
 ## Caching Strategy
 
-The `fetchDocPage` tool implements a sophisticated ETag-based caching system that provides optimal performance while ensuring content freshness.
+The `fetchDocPage` tool implements an ETag-based caching system that ensures content freshness but remains performant.
 
 ### 1. File System Cache
 
