@@ -1,8 +1,7 @@
-import { fetchService } from './fetchService.ts';
-import { ContentType, POWERTOOLS_BASE_URL } from './constants.ts';
-import { logger } from './logger.ts';
 import lunr from 'lunr';
-import type { MkDocsSearchIndex } from './types/searchIndex.ts';
+import { POWERTOOLS_BASE_URL } from '../../constants.ts';
+import { logger } from '../../logger.ts';
+import type { MkDocsSearchIndex } from './types.ts';
 
 // Function to fetch available versions for a runtime
 async function fetchAvailableVersions(
@@ -12,8 +11,7 @@ async function fetchAvailableVersions(
 > {
   try {
     const url = `${POWERTOOLS_BASE_URL}/${runtime}/versions.json`;
-    const response = await fetchService.fetch(url, {
-      contentType: ContentType.WEB_PAGE,
+    const response = await fetch(url, {
       headers: {
         Accept: 'application/json',
       },
@@ -47,8 +45,7 @@ async function fetchSearchIndex(
 ): Promise<MkDocsSearchIndex | undefined> {
   try {
     const url = getSearchIndexUrl(runtime, version);
-    const response = await fetchService.fetch(url, {
-      contentType: ContentType.WEB_PAGE,
+    const response = await fetch(url, {
       headers: {
         Accept: 'application/json',
       },
