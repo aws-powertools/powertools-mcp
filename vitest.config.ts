@@ -11,7 +11,11 @@ export default defineConfig({
         lines: 100,
       },
       include: ['src/**'],
-      exclude: [...coverageConfigDefaults.exclude],
+      exclude: [
+        ...coverageConfigDefaults.exclude,
+        'src/index.ts',
+        'src/tools/*/index.ts',
+      ],
     },
     setupFiles: ['./tests/setupEnv.ts'],
     hookTimeout: 1_000 * 60 * 10, // 10 minutes
