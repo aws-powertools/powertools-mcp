@@ -112,7 +112,7 @@ Cache keys are generated from the URL structure to ensure uniqueness:
 ```typescript
 // Example transformation
 URL: https://docs.powertools.aws.dev/lambda/python/2.1.0/core/logger/index.md
-Key: python/2.1.0/core/logger/index.md
+Key: lambda/python/2.1.0/core/logger/index.md
 ```
 
 ### 4. Cache Validation Flow
