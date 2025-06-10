@@ -26,8 +26,7 @@
     "test:e2e": "vitest --run tests/e2e",
     "test:unit:coverage": "vitest --run tests/unit --coverage.enabled --coverage.thresholds.100 --coverage.include='src/**'",
     "prebuild": "rimraf dist/*",
-    "build": "node esbuild.config.mjs",
-    "postbuild": "chmod +x dist/index.js",
+    "build": "tsc --build",
     "lint": "biome lint .",
     "lint:fix": "biome check --write .",
     "dev": "npx @modelcontextprotocol/inspector node --experimental-transform-types src/index.ts",
@@ -55,7 +54,7 @@
     "@aws-lambda-powertools/logger": "^2.21.0",
     "@modelcontextprotocol/sdk": "^1.10.1",
     "@types/cacache": "^17.0.2",
-    "@types/node": "^22.14.1",
+    "@types/node": "^24.0.0",
     "cacache": "^19.0.1",
     "lunr": "^2.3.9",
     "zod": "^3.25.57"
