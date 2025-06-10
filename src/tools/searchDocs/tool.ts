@@ -89,7 +89,8 @@ const tool = async (props: ToolProps): Promise<CallToolResult> => {
   for (const result of index.search(search)) {
     if (result.score < SEARCH_CONFIDENCE_THRESHOLD) break; // Results are sorted by score, so we can stop early
     results.push({
-      location: `${baseUrl}/${result.ref}`,
+      title: result.ref,
+      url: `${baseUrl}/${result.ref}`,
       score: result.score,
     });
   }

@@ -133,7 +133,8 @@ describe('tool', () => {
 
     // Assess
     expect(result.content).toHaveNthResultWith(1, {
-      location: `${POWERTOOLS_BASE_URL}/typescript/latest/features/logger/#buffering-logs`,
+      title: 'features/logger/#buffering-logs',
+      url: `${POWERTOOLS_BASE_URL}/typescript/latest/features/logger/#buffering-logs`,
       score: expect.any(Number),
     });
   });

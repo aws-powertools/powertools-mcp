@@ -51,11 +51,15 @@ describe('MCP Server e2e (child process)', () => {
     // Assess
     expect(response.content[0].type).toBe('text');
     expect(response.content[0].text).toBeDefined();
-    const parsedText = JSON.parse(response.content[0].text);
-    expect(parsedText).toBeInstanceOf(Array);
-    expect(parsedText.length).toBeGreaterThan(0);
-    expect(parsedText[0]).toHaveProperty('title');
-    expect(parsedText[0]).toHaveProperty('url');
+    expect(response.content[0].type).toBe('text');
+    expect(response.content[0].text).toBeDefined();
+    expect(response.content).toHaveNthResultWith(1, {
+      title: 'features/metrics/',
+      score: expect.any(Number),
+      url: expect.stringContaining(
+        `${POWERTOOLS_BASE_URL}/typescript/latest/features/metrics/`
+      ),
+    });
   });
 
   it('uses the fetch_doc_page tool', async () => {

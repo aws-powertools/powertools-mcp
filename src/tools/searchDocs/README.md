@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `searchDocs` tool provides search capabilities across Powertools for AWS Lambda documentation for multiple runtime environments. It fetches search indices from the documentation and performs full-text search using Lunr.js.
+The `search_docs` tool provides search capabilities across Powertools for AWS Lambda documentation for multiple runtime environments. It fetches search indices from the documentation and performs full-text search using Lunr.js.
 
 ## Features
 
@@ -139,7 +139,8 @@ The tool uses disk-based caching via the `fetchWithCache` utility:
 ```json
 [
   {
-    "location": "https://docs.powertools.aws.dev/lambda/python/latest/core/logger/",
+    "title": "features/logger/#buffering-logs",
+    "url": "https://docs.powertools.aws.dev/lambda/python/latest/core/logger/",
     "score": 15.234
   }
 ]
