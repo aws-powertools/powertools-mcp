@@ -5,6 +5,9 @@ import { ALLOWED_DOMAIN, runtimes } from '../../constants.ts';
  * Schema for the input of the tool.
  *
  * Used to parse the tool arguments and validate them before calling the tool.
+ *
+ * TypeScript and Python runtimes support semantic versioning (x.y.z) or 'latest' in the URL,
+ * so we validate the URL structure accordingly.
  */
 const schema = {
   url: z
@@ -20,11 +23,13 @@ const schema = {
       if (!runtimes.includes(runtime as (typeof runtimes)[number])) {
         return false;
       }
-      const version = pathParts[2];
-      const isValidSemver = /^\d+\.\d+\.\d+$/.test(version);
-      const isLatest = version === 'latest';
-      if (isValidSemver === false && isLatest === false) {
-        return false;
+      if (runtime === 'typescript' || runtime === 'python') {
+        const version = pathParts[2];
+        const isValidSemver = /^\d+\.\d+\.\d+$/.test(version);
+        const isLatest = version === 'latest';
+        if (isValidSemver === false && isLatest === false) {
+          return false;
+        }
       }
 
       return true;

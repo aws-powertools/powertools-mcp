@@ -76,19 +76,4 @@ const getRemotePageETag = async (url: URL): Promise<string | null> => {
   }
 };
 
-/**
- * Generate a cache key based on the URL of a documentation page.
- *
- * @param props - options for generating a cache key
- * @param props.url - the URL of the documentation page
- */
-const generateCacheKey = (props: { url: URL }): string => {
-  const { url } = props;
-  const pathParts = url.pathname.split('/').filter(Boolean);
-  const [_, runtime, version, ...rest] = pathParts;
-  const pagePath = rest.join('/');
-
-  return `${runtime}/${version}/${pagePath}`;
-};
-
-export { getRemotePage, getRemotePageETag, generateCacheKey };
+export { getRemotePage, getRemotePageETag };
