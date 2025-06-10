@@ -1,3 +1,4 @@
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { expect, vi } from 'vitest';
 
 // Mock console methods to prevent output during tests
@@ -60,12 +61,34 @@ expect.extend({
       expected,
     };
   },
+  toBeResponseWithText(received, content) {
+    const textContent =
+      typeof content === 'string' ? content : JSON.stringify(content);
+    if (
+      received.some(
+        (item: CallToolResult) =>
+          item.type === 'text' && (item.text as string).includes(textContent)
+      )
+    ) {
+      return {
+        message: () => '',
+        pass: true,
+      };
+    }
+
+    return {
+      message: () => `Expected response to contain text: ${textContent}`,
+      pass: false,
+      actual: received.content,
+      expected: textContent,
+    };
+  },
 });
 
 declare module 'vitest' {
   interface Assertion {
     /**
-     * Asserts that the logger function has been called with the expected log message
+     * Assesss that the logger function has been called with the expected log message
      * during any call.
      *
      * @example
@@ -83,7 +106,7 @@ declare module 'vitest' {
      */
     toHaveLogged(expected: Record<string, unknown>): void;
     /**
-     * Asserts that the logger function has been called with the expected log message
+     * Assesss that the logger function has been called with the expected log message
      * during the specific nth call.
      *
      * @example
@@ -102,7 +125,17 @@ declare module 'vitest' {
      * @param expected - The expected log message
      */
     toHaveLoggedNth(nth: number, expected: Record<string, unknown>): void;
+    /**
+     * Assesss that the response contains the expected text content.
+     *
+     * @example
+     * ```ts
+     * expect(response).toBeResponseWithText('Hello, world!');
+     * ```
+     */
+    toBeResponseWithText(content: string | Record<string, unknown>): void;
   }
 }
 
 process.env.POWERTOOLS_DEV = 'true';
+process.env.LOG_LEVEL = 'debug';

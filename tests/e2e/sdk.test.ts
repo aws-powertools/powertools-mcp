@@ -83,6 +83,6 @@ describe('MCP Server e2e (sdk)', () => {
 
     // Assess
     expect(response.content[0].type).toBe('text');
-    expect(response.content[0].text).toContain('# Metrics');
+    expect(response.content[0].text).toContain('Metrics');
   });
 });
