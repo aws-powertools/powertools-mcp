@@ -17,7 +17,10 @@
     "strict": true,
     "skipLibCheck": true,
     "pretty": true, // Enable pretty formatting for output messages.
-    "rewriteRelativeImportExtensions": true
+    "rewriteRelativeImportExtensions": true,
+    "outDir": "dist",
+    "sourceMap": true,
+    "rootDir": "src"
   },
   "include": [
     "src/**/*.ts"
