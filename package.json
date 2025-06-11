@@ -1,6 +1,6 @@
 {
   "name": "powertools-for-aws-mcp",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "description": "Powertools for AWS Lambda MCP Server",
   "bin": {
     "powertools-mcp": "dist/index.js"
