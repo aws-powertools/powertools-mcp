@@ -16,7 +16,7 @@ import type { ToolProps } from './types.ts';
  * hydrates it into a Lunr index, and performs a search based on the provided query.
  *
  * The search index is expected to be in a specific format, and the results
- * are filtered based on a confidence threshold to ensure relevance. The threshold
+ * are filtered based on a confidence threshold to ensure relevance. This threshold
  * can be configured via the `SEARCH_CONFIDENCE_THRESHOLD` environment variable.
  *
  * This tool is designed to work with the Powertools for AWS documentation
