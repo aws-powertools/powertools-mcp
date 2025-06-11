@@ -1,3 +1,25 @@
+## v0.8.6
+
+[compare changes](https://github.com/aws-powertools/powertools-mcp/compare/v0.8.5...v0.8.6)
+
+### 🚀 Enhancements
+
+- Consume md docs directly ([#78](https://github.com/aws-powertools/powertools-mcp/pull/78))
+- Refactor search docs tool ([#83](https://github.com/aws-powertools/powertools-mcp/pull/83))
+
+### 🩹 Fixes
+
+- Handle .NET & Java url schemes ([#82](https://github.com/aws-powertools/powertools-mcp/pull/82))
+- **build:** Remove esbuild and use tsc for the compilation ([#74](https://github.com/aws-powertools/powertools-mcp/pull/74))
+
+### 🏡 Chore
+
+- **deps-dev:** Bump @modelcontextprotocol/inspector from 0.13.0 to 0.14.0 ([#65](https://github.com/aws-powertools/powertools-mcp/pull/65))
+
+### ✅ Tests
+
+- Add e2e tests ([#73](https://github.com/aws-powertools/powertools-mcp/pull/73))
+
 ## v0.8.5
 
 [compare changes](https://github.com/aws-powertools/powertools-mcp/compare/v0.8.4...v0.8.5)
