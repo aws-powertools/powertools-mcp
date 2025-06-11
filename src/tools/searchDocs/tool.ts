@@ -1,3 +1,4 @@
+import { isNullOrUndefined } from '@aws-lambda-powertools/commons/typeutils';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import lunr from 'lunr';
 import {
@@ -53,7 +54,10 @@ const tool = async (props: ToolProps): Promise<CallToolResult> => {
       contentType: 'application/json',
     });
     searchIndexContent = JSON.parse(content);
-    if (!('docs' in searchIndexContent)) {
+    if (
+      isNullOrUndefined(searchIndexContent.docs) ||
+      !Array.isArray(searchIndexContent.docs)
+    ) {
       throw new Error(
         `Invalid search index format for ${runtime} ${version}: missing 'docs' property`
       );

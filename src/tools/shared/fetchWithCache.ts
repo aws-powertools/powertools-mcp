@@ -14,9 +14,9 @@ type FetchResult<T extends 'GET' | 'HEAD'> = T extends 'GET'
   : { content: undefined; eTag: string | null };
 
 /**
- * Get the ETag of a remote documentation page.
+ * Get a remote resource from the documentation.
  *
- * @param url - The URL of the remote documentation page to fetch the ETag from.
+ * @param url - The URL of the remote documentation resource to fetch
  */
 const fetchFromRemote = async <T extends 'GET' | 'HEAD'>(
   props: FetchProps<T>
