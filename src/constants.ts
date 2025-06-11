@@ -1,6 +1,9 @@
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { getStringFromEnv } from '@aws-lambda-powertools/commons/utils/env';
+import {
+  getNumberFromEnv,
+  getStringFromEnv,
+} from '@aws-lambda-powertools/commons/utils/env';
 
 const MCP_SERVER_NAME = 'powertools-for-aws-mcp' as const;
 
@@ -18,6 +21,14 @@ const CACHE_BASE_PATH = getStringFromEnv({
   defaultValue: join(tmpdir(), 'powertools-mcp'),
 });
 
+/**
+ * Threshold for search confidence out of 100.
+ */
+const SEARCH_CONFIDENCE_THRESHOLD = getNumberFromEnv({
+  key: 'SEARCH_CONFIDENCE_THRESHOLD',
+  defaultValue: 30,
+});
+
 export {
   MCP_SERVER_NAME,
   ALLOWED_DOMAIN,
@@ -25,4 +36,5 @@ export {
   runtimes,
   POWERTOOLS_BASE_URL,
   CACHE_BASE_PATH,
+  SEARCH_CONFIDENCE_THRESHOLD,
 };

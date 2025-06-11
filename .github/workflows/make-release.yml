@@ -23,18 +23,16 @@ concurrency:
   group: on-release-publish
 
 jobs:
-  # temporarily disabled until we address #48
-  # run-unit-tests:
-  #  uses: ./.github/workflows/reusable-code-quality.yml
+  run-unit-tests:
+    uses: ./.github/workflows/reusable-code-quality.yml
   run-e2e-tests:
-    # needs: run-unit-tests # uncomment when we re-enable the unit tests #48
     uses: ./.github/workflows/reusable-e2e.yml
   # This job publishes the packages to npm.
   # It uses the latest git commit sha as the version and ensures provenance with NPM_CONFIG_PROVENANCE flag.
   # We don't bump the version because we do that in the `make-version` workflow.
   # It also sets the RELEASE_VERSION output to be used by the next job to create a git tag.
   publish-npm:
-    needs: run-e2e-tests
+    needs: [run-e2e-tests, run-unit-tests]
     # Needed as recommended by npm docs on publishing with provenance https://docs.npmjs.com/generating-provenance-statements
     permissions:
       id-token: write

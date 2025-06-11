@@ -2,16 +2,15 @@
 
 ## Overview
 
-The `searchDocs` tool provides intelligent search capabilities across AWS Lambda Powertools documentation for multiple runtime environments. It enables users to quickly find relevant documentation, examples, and best practices by searching through indexed content from the official Powertools documentation.
+The `search_docs` tool provides search capabilities across Powertools for AWS Lambda documentation for multiple runtime environments. It fetches search indices from the documentation and performs full-text search using Lunr.js.
 
 ## Features
 
 - **Multi-runtime Support**: Search across Python, TypeScript, Java, and .NET documentation
-- **Version-aware Search**: Support for specific versions or latest documentation
-- **Intelligent Ranking**: Uses Lunr.js for full-text search with relevance scoring
-- **Optimized Results**: Smart filtering and snippet generation for better readability
-- **In-memory Caching**: Efficient caching strategy to minimize network requests
-- **Error Handling**: Comprehensive validation and error reporting
+- **Version-aware Search**: Support for specific versions or latest documentation (Python/TypeScript only)
+- **Full-text Search**: Uses Lunr.js for tokenized search with relevance scoring
+- **File-based Caching**: Uses disk cache to minimize network requests
+- **Confidence Filtering**: Filters results based on configurable confidence threshold
 
 ## Parameters
 
@@ -19,22 +18,22 @@ The tool accepts the following parameters:
 
 ### Required Parameters
 
-| Parameter | Type | Description | Example |
-|-----------|------|-------------|---------|
-| `search` | `string` | The search query to find in documentation | `"Logger"`, `"batch processor"`, `"metrics decorator"` |
-| `runtime` | `enum` | The runtime environment to search in | `"python"`, `"typescript"`, `"java"`, `"dotnet"` |
+| Parameter | Type     | Description                               | Example                                                |
+| --------- | -------- | ----------------------------------------- | ------------------------------------------------------ |
+| `search`  | `string` | The search query to find in documentation | `"Logger"`, `"batch processor"`, `"metrics decorator"` |
+| `runtime` | `enum`   | The runtime environment to search in      | `"python"`, `"typescript"`, `"java"`, `"dotnet"`       |
 
 ### Optional Parameters
 
-| Parameter | Type | Default | Description | Example |
-|-----------|------|---------|-------------|---------|
+| Parameter | Type     | Default    | Description                                 | Example               |
+| --------- | -------- | ---------- | ------------------------------------------- | --------------------- |
 | `version` | `string` | `"latest"` | Semantic version (x.y.z format) or "latest" | `"2.1.0"`, `"latest"` |
 
 ### Parameter Validation
 
 - **search**: Must be a non-empty string after trimming whitespace
-- **runtime**: Must be one of the supported runtimes: `python`, `typescript`, `java`, `dotnet`
-- **version**: Must follow semantic versioning format (x.y.z) or be "latest"
+- **runtime**: Must be one of the supported runtimes: `java`, `dotnet`, `typescript`, `python`
+- **version**: String value (defaults to `latest`); versioning only supported for Python and TypeScript
 
 ## Flow Diagram
 
@@ -42,94 +41,70 @@ The tool accepts the following parameters:
 graph TD
     A[Search Request] --> B{Validate Parameters}
     B -->|Invalid| C[Return Validation Error]
-    B -->|Valid| D[Resolve Version]
+    B -->|Valid| D[Build Search Index URL]
     
-    D --> E{Version Valid?}
-    E -->|No| F[Return Available Versions]
-    E -->|Yes| G{Index Cached?}
+    D --> E[Generate Cache Key]
+    E --> F[Parallel ETag Check]
     
-    G -->|Yes| H[Get Cached Index]
-    G -->|No| I[Fetch Search Index]
+    F --> G[Get Cached ETag]
+    F --> H[Get Remote ETag via HEAD]
     
-    I --> J{Fetch Successful?}
-    J -->|No| K[Return Fetch Error]
-    J -->|Yes| L[Convert MkDocs to Lunr Index]
+    G --> I{Both ETags Available?}
+    H --> I
     
-    L --> M[Cache Index]
-    M --> N[Perform Search]
-    H --> N
+    I -->|No Cached ETag| J[Fetch Search Index]
+    I -->|No Remote ETag| J
+    I -->|Both Available| K{ETags Match?}
     
-    N --> O[Apply Score Filtering]
-    O --> P[Limit Results]
-    P --> Q[Format Results with URLs]
-    Q --> R[Return Search Results]
+    K -->|Yes| L[Get Cached Index]
+    K -->|No| J
+    
+    L --> R{Index Available?}
+    R -->|Yes| S[Parse JSON Index]
+    R -->|No - Corrupted/Missing| J
+    
+    J --> M{Fetch Successful?}
+    M -->|No| N[Return Fetch Error]
+    M -->|Yes| O[Store Index in Cache]
+    
+    O --> P[Store ETag in Cache]
+    P --> S
+    
+    S --> T[Build Lunr Search Index]
+    T --> U[Execute Search Query]
+    U --> V[Apply Score Filtering]
+    V --> W[Generate Result URLs]
+    W --> X[Return Search Results]
     
     style A fill:#e1f5fe
-    style R fill:#e8f5e8
+    style X fill:#e8f5e8
     style C fill:#ffebee
-    style F fill:#fff3e0
-    style K fill:#ffebee
+    style N fill:#ffebee
 ```
 
-## Caching Strategy
+## How It Works
 
-The searchDocs tool implements a sophisticated multi-level caching strategy to optimize performance and reduce network overhead:
+1. **Parameter Validation**: Validates search query, runtime, and version parameters
+2. **URL Construction**: Builds the search index URL based on runtime and version
+3. **Index Fetching**: Fetches the MkDocs search index using cached HTTP requests
+4. **Index Building**: Creates a Lunr.js search index from the fetched data
+5. **Search Execution**: Performs full-text search with title boosting (10x)
+6. **Result Filtering**: Filters results by confidence threshold (configurable via `SEARCH_CONFIDENCE_THRESHOLD`)
+7. **URL Generation**: Constructs full documentation URLs for each result
 
-### 1. In-Memory Index Cache
+## Caching
 
-- **Storage**: `Map<string, SearchIndex>` in the `SearchIndexFactory` class
-- **Key Format**: `{runtime}-{version}` (e.g., `python-2.1.0`, `typescript-latest`)
-- **Lifetime**: Session-based (cleared when server restarts)
-- **Content**: Complete Lunr search index and optimized document map
+The tool uses disk-based caching via the `fetchWithCache` utility:
 
-### 2. Version Resolution Cache
-
-- **Purpose**: Caches available versions for each runtime
-- **Benefit**: Reduces API calls to `versions.json` endpoints
-- **Implementation**: Implicit caching through the version resolution process
-
-### 3. Document Optimization
-
-The tool optimizes memory usage by storing only essential document data:
-
-```typescript
-// Cached document structure (minimal footprint)
-{
-  title: string,           // Document title
-  location: string,        // Document path/URL
-  preview: string,         // First 200 characters + "..."
-  tags: string[]          // Optional tags
-}
-```
-
-### 4. Cache Invalidation
-
-- **Manual**: No explicit cache invalidation (session-based)
-- **Automatic**: Cache is cleared when the MCP server restarts
-- **Strategy**: Cache-aside pattern - fetch on miss, store on successful retrieval
-
-### 5. Performance Benefits
-
-- **First Request**: ~500-2000ms (network fetch + index building)
-- **Subsequent Requests**: ~10-50ms (memory lookup + search)
-- **Memory Usage**: ~1-5MB per cached runtime/version combination
-- **Network Savings**: 99%+ reduction in repeated fetch requests
-
-### 6. Cache Key Strategy
-
-```typescript
-protected getCacheKey(runtime: string, version = 'latest'): string {
-  return `${runtime}-${version}`;
-}
-```
-
-Runtime-specific version handling:
-- **Python/TypeScript**: Version-specific URLs and caching
-- **Java/.NET**: Single "latest" version (no versioning yet)
+- **Cache Location**: System temp directory (`/tmp/powertools-mcp` by default)
+- **Cache Strategy**: ETag-based caching with automatic invalidation
+- **Performance**: Subsequent requests for the same search index are served from cache
+- **Configuration**: Cache path configurable via `CACHE_BASE_PATH` environment variable
 
 ## Usage Examples
 
 ### Basic Search
+
 ```json
 {
   "search": "Logger",
@@ -138,6 +113,7 @@ Runtime-specific version handling:
 ```
 
 ### Version-Specific Search
+
 ```json
 {
   "search": "batch processor",
@@ -147,6 +123,7 @@ Runtime-specific version handling:
 ```
 
 ### Feature Discovery
+
 ```json
 {
   "search": "idempotency decorator",
@@ -158,22 +135,23 @@ Runtime-specific version handling:
 ## Response Format
 
 ### Successful Response
+
 ```json
 [
   {
-    "title": "Logger - Powertools for AWS Lambda (Python)",
-    "url": "https://docs.powertools.aws.dev/lambda/python/2.1.0/core/logger/",
-    "score": 15.234,
-    "snippet": "Logger provides a custom logging handler that formats logs..."
+    "title": "features/logger/#buffering-logs",
+    "url": "https://docs.powertools.aws.dev/lambda/python/latest/core/logger/",
+    "score": 15.234
   }
 ]
 ```
 
 ### Error Response
+
 ```json
 {
-  "error": "Invalid version: 1.0.0 for runtime: python",
-  "availableVersions": ["2.1.0", "2.0.0", "1.9.0"]
+  "content": "Failed to fetch search index for python latest: Network error",
+  "isError": true
 }
 ```
 
@@ -181,80 +159,46 @@ Runtime-specific version handling:
 
 ### Search Algorithm
 
-1. **Full-text Search**: Uses Lunr.js for tokenized, stemmed search
+1. **Full-text Search**: Uses Lunr.js for tokenized search
 2. **Field Boosting**: Title matches receive 10x score boost
-3. **Score Filtering**: Results within 10 points of top score
-4. **Result Limiting**: Maximum 10 results per search
-5. **Snippet Generation**: Truncated previews for better readability
+3. **Score Filtering**: Results below confidence threshold are excluded
+4. **Early Termination**: Stops processing when score drops below threshold (results are sorted)
 
 ### URL Generation
 
-Different runtimes have different URL patterns:
+Runtime-specific URL patterns:
 
-- **Python/TypeScript**: `https://docs.powertools.aws.dev/lambda/{runtime}/{version}/{path}`
-- **Java/.NET**: `https://docs.powertools.aws.dev/lambda/{runtime}/{path}`
+- **Python/TypeScript**: `https://docs.powertools.aws.dev/lambda/{runtime}/{version}/search/search_index.json`
+- **Java/.NET**: `https://docs.powertools.aws.dev/lambda/{runtime}/search/search_index.json`
+
+Result URLs:
+
+- **Python/TypeScript**: `{baseUrl}/{document.location}`
+- **Java/.NET**: `{baseUrl}/{document.location}`
+
+### Configuration
+
+- **Confidence Threshold**: Configurable via `SEARCH_CONFIDENCE_THRESHOLD` environment variable (default: 30)
+- **Fetch Timeout**: 15 seconds for all HTTP requests
+- **Cache Path**: Configurable via `CACHE_BASE_PATH` environment variable
 
 ### Error Handling
 
-The tool provides comprehensive error handling for:
-
-- Invalid runtime specifications
-- Unsupported or non-existent versions
 - Network connectivity issues
 - Malformed search indices
+- Invalid search index format
 - Search execution failures
 
-### Security Considerations
+### Security
 
 - **Domain Restriction**: Only fetches from `docs.powertools.aws.dev`
-- **Input Validation**: All parameters are validated using Zod schemas
+- **Input Validation**: Parameters validated using Zod schemas
 - **Timeout Protection**: 15-second timeout for all network requests
-- **Error Sanitization**: Error messages are sanitized before return
 
-## Architecture Components
+## Files
 
-### Core Classes
-
-- **SearchIndexFactory**: Manages index caching and version resolution
-- **Tool Function**: Main entry point and orchestration logic
-- **Search Functions**: Lunr integration and result processing
-
-### Key Files
-
-- `tool.ts`: Main tool implementation and error handling
-- `searchIndex.ts`: Index management, caching, and search logic
-- `schemas.ts`: Parameter validation schemas
+- `tool.ts`: Main tool implementation and search logic
+- `schemas.ts`: Parameter validation schemas  
 - `types.ts`: TypeScript type definitions
-- `constants.ts`: Tool metadata and configuration
-
-## Performance Characteristics
-
-### Benchmarks (Typical)
-
-- **Cold Start**: 500-2000ms (first search per runtime/version)
-- **Warm Search**: 10-50ms (cached index)
-- **Memory Footprint**: 1-5MB per cached index
-- **Network Efficiency**: 99%+ cache hit rate after initial load
-
-### Scalability
-
-- **Concurrent Searches**: Fully thread-safe for read operations
-- **Memory Growth**: Linear with number of cached runtime/version combinations
-- **Index Size**: Optimized document storage reduces memory by ~60%
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Version Not Found**: Check available versions using invalid version error response
-2. **Network Timeouts**: Verify connectivity to `docs.powertools.aws.dev`
-3. **Empty Results**: Try broader search terms or check runtime compatibility
-4. **Memory Issues**: Restart MCP server to clear cache if needed
-
-### Debug Information
-
-The tool provides detailed logging for troubleshooting:
-- Version resolution steps
-- Cache hit/miss information
-- Search result counts and timing
-- Network request status
+- `constants.ts`: Tool metadata
+- `index.ts`: Tool export

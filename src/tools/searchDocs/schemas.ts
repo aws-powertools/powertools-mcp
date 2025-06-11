@@ -14,7 +14,7 @@ const schema = {
   runtime: z
     .enum(runtimes)
     .refine((val) => val.toLowerCase().trim())
-    .describe('the runtime index to search'),
+    .describe('the Powertools for AWS runtime to search the documentation for'),
   version: z
     .string()
     .refine((val) => val.toLowerCase().trim())
