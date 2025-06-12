@@ -1,3 +1,11 @@
+## v0.8.7
+
+[compare changes](https://github.com/aws-powertools/powertools-mcp/compare/v0.8.6...v0.8.7)
+
+### 🚀 Enhancements
+
+- Add Java runtime versioning support ([#91](https://github.com/aws-powertools/powertools-mcp/pull/91))
+
 ## v0.8.6
 
 [compare changes](https://github.com/aws-powertools/powertools-mcp/compare/v0.8.5...v0.8.6)
