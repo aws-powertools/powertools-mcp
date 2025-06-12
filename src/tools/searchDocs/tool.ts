@@ -37,7 +37,7 @@ const tool = async (props: ToolProps): Promise<CallToolResult> => {
   logger.appendKeys({ search, runtime, version });
 
   const urlParts =
-    runtime === 'python' || runtime === 'typescript'
+    runtime === 'python' || runtime === 'typescript' || runtime === 'java'
       ? [runtime, version]
       : [runtime];
   const baseUrl = `${POWERTOOLS_BASE_URL}/${urlParts.join('/')}`;

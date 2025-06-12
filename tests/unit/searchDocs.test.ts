@@ -77,8 +77,9 @@ describe('tool', () => {
       http.get(`${POWERTOOLS_BASE_URL}/dotnet/search/search_index.json`, () =>
         HttpResponse.text('Metrics is a feature of PowerTools for TypeScript.')
       ),
-      http.get(`${POWERTOOLS_BASE_URL}/java/search/search_index.json`, () =>
-        HttpResponse.text(JSON.stringify({ foo: [] }))
+      http.get(
+        `${POWERTOOLS_BASE_URL}/java/latest/search/search_index.json`,
+        () => HttpResponse.text(JSON.stringify({ foo: [] }))
       ),
       http.get(
         `${POWERTOOLS_BASE_URL}/python/latest/search/search_index.json`,
@@ -167,14 +168,14 @@ describe('tool', () => {
 
     // Act
     const result = await tool({
-      version: '',
+      version: 'latest',
       runtime: 'java',
       search: 'log buffering',
     });
 
     // Assess
     expect(result.content).toBeResponseWithText(
-      `Failed to fetch search index for java : Invalid search index format for java : missing 'docs' property`
+      `Failed to fetch search index for java latest: Invalid search index format for java latest: missing 'docs' property`
     );
     expect(result.isError).toBe(true);
   });
