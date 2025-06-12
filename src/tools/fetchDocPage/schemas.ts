@@ -23,7 +23,11 @@ const schema = {
       if (!runtimes.includes(runtime as (typeof runtimes)[number])) {
         return false;
       }
-      if (runtime === 'typescript' || runtime === 'python') {
+      if (
+        runtime === 'typescript' ||
+        runtime === 'python' ||
+        runtime === 'java'
+      ) {
         const version = pathParts[2];
         const isValidSemver = /^\d+\.\d+\.\d+$/.test(version);
         const isLatest = version === 'latest';
