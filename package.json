@@ -57,7 +57,7 @@
     "@types/node": "^24.0.0",
     "cacache": "^19.0.1",
     "lunr": "^2.3.9",
-    "zod": "^3.25.57"
+    "zod": "^3.25.63"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
