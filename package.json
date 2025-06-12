@@ -54,7 +54,7 @@
     "@aws-lambda-powertools/logger": "^2.21.0",
     "@modelcontextprotocol/sdk": "^1.10.1",
     "@types/cacache": "^19.0.0",
-    "@types/node": "^24.0.0",
+    "@types/node": "^24.0.1",
     "cacache": "^19.0.1",
     "lunr": "^2.3.9",
     "zod": "^3.25.57"
