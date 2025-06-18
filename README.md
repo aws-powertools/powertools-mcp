@@ -1,7 +1,7 @@
 # Powertools for AWS MCP
 
 ![NodeSupport](https://img.shields.io/static/v1?label=node&message=%2022&color=green?style=flat-square&logo=node)
-![GitHub Release](https://img.shields.io/github/v/release/aws-powertools/powertools-mcp?style=flat-square)
+![GitHub Release](https://img.shields.io/github/v/release/aws-powertools/powertools-mcp?include_prereleases)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/aws-powertools/powertools-mcp/badge)](https://api.securityscorecards.dev/projects/github.com/aws-powertools/powertools-mcp)
 [![Status](https://img.shields.io/badge/Status-Experimental-orange.svg)](https://shields.io/)
 [![Stability](https://img.shields.io/badge/Stability-Evolving-yellow.svg)](https://shields.io/)

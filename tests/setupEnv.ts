@@ -16,7 +16,7 @@ expect.extend({
       const [rawMessage] = call;
       try {
         messages[idx] = JSON.parse(rawMessage);
-      } catch (error) {
+      } catch {
         messages[idx] = rawMessage;
       }
       if (this.equals(messages[idx], expected)) {
@@ -87,7 +87,7 @@ expect.extend({
     let parsedReceived: Record<string, unknown>[];
     try {
       parsedReceived = JSON.parse(received[0].text);
-    } catch (error) {
+    } catch {
       return {
         message: () => 'Response text is not valid JSON',
         pass: false,

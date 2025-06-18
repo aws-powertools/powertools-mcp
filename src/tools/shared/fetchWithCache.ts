@@ -122,6 +122,9 @@ const fetchWithCache = async (
         const cachedResource = await getFromCache(cachePath, cacheKey);
         return cachedResource.data.toString();
       } catch (error) {
+        logger.error('Failed to retrieve cached resource', {
+          error,
+        });
         throw new CacheError(
           'Cached resource not found even though ETag matches; cache may be corrupted'
         );
