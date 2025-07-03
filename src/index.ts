@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { logger } from './logger.ts';
 import { createServer } from './server.ts';
