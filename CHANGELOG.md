@@ -1,3 +1,21 @@
+## v0.8.8
+
+[compare changes](https://github.com/aws-powertools/powertools-mcp/compare/v0.8.7...v0.8.8)
+
+### 🩹 Fixes
+
+- Add Nodejs shebang to module entry point ([#122](https://github.com/aws-powertools/powertools-mcp/pull/122))
+
+### 🏡 Chore
+
+- **deps-dev:** Bump @modelcontextprotocol/inspector from 0.14.0 to 0.14.1 in the npm_and_yarn group across 1 directory ([#95](https://github.com/aws-powertools/powertools-mcp/pull/95))
+- **deps-dev:** Bump @modelcontextprotocol/inspector from 0.14.0 to 0.14.2 ([#97](https://github.com/aws-powertools/powertools-mcp/pull/97))
+- **deps-dev:** Bump lint-staged from 16.1.0 to 16.1.2 ([#98](https://github.com/aws-powertools/powertools-mcp/pull/98))
+- Upgrade to biome 2.x ([#103](https://github.com/aws-powertools/powertools-mcp/pull/103))
+- **deps-dev:** Bump the vitest group across 1 directory with 2 update ([#104](https://github.com/aws-powertools/powertools-mcp/pull/104))
+- **deps-dev:** Bump @biomejs/biome from 2.0.0 to 2.0.6 ([#113](https://github.com/aws-powertools/powertools-mcp/pull/113))
+- **deps-dev:** Bump @modelcontextprotocol/inspector from 0.14.2 to 0.15.0 ([#117](https://github.com/aws-powertools/powertools-mcp/pull/117))
+
 ## v0.8.7
 
 [compare changes](https://github.com/aws-powertools/powertools-mcp/compare/v0.8.6...v0.8.7)
