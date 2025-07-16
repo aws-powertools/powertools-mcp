@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/aws-powertools-powertools-mcp-badge.png)](https://mseep.ai/app/aws-powertools-powertools-mcp)
+
 # Powertools for AWS MCP
 
 ![NodeSupport](https://img.shields.io/static/v1?label=node&message=%2022&color=green?style=flat-square&logo=node)
