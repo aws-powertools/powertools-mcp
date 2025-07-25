@@ -54,7 +54,7 @@ jobs:
         run: |
           npm set "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}"
       - name: Setup dependencies
-        uses: aws-powertools/actions/.github/actions/cached-node-modules@b8e12f37991bb03672113b65cae09d52d494bbef
+        uses: aws-powertools/actions/.github/actions/cached-node-modules@7d2401cbbb232594bde7285bc5b8c0c78dcbe6e2
       - name: Publish to npm
         run: |
           NPM_CONFIG_PROVENANCE=true npm publish
