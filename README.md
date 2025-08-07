@@ -23,9 +23,9 @@ We're actively seeking community feedback and feature suggestions [join our Disc
 
 ## Getting Started
 
-| Cursor | VS Code |
-|:------:|:-------:|
-| [![Coming Soon](https://img.shields.io/badge/Coming-Soon-gray?style=flat-square&logo=cursor&logoColor=white)](#getting-started-with-cursor) | [![Install on VS Code](https://img.shields.io/badge/Install_on-VS_Code-FF9900?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=Powertools%20for%20AWS%20MCP&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22powertools-for-aws-mcp%22%5D%7D) |
+|                                                                                                           Cursor                                                                                                           |                                                                                                                                                             VS Code                                                                                                                                                             |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/install-mcp?name=powertools&config=JTdCJTIyY29tbWFuZCUyMiUzQSUyMm5weCUyMC15JTIwcG93ZXJ0b29scy1mb3ItYXdzLW1jcCUyMiU3RA%3D%3D) | [![Install on VS Code](https://img.shields.io/badge/Install_on-VS_Code-FF9900?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=Powertools%20for%20AWS%20MCP&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22powertools-for-aws-mcp%22%5D%7D) |
 
 Most clients that support MCP can use this server out of the box using a configuration similar to the following:
 
@@ -52,24 +52,18 @@ For detailed setup instructions for specific clients, see the configurations bel
 ### Getting Started with Amazon Q Developer CLI
 
 <details>
-<summary>Install in Amazon Q Developer CLI</summary>
+<summary>Use in Amazon Q Developer CLI</summary>
 
 See [Amazon Q Developer CLI documentation](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-mcp-config-CLI.html) for details.
 
-1. **Access MCP Settings**
+**Add MCP Server using CLI commands:**
 
-   - Open the Q Developer panel and open the **Chat** panel.
-   - Choose the tools icon to access to MCP configuration.
+```bash
+qchat mcp add powertools npx -y powertools-for-aws-mcp
+```
 
-2. **Add MCP Servers**
-
-   - Choose the plus (+) symbol.
-   - Select the scope: global or local.
-     If you select global scope, the MCP server configuration is stored in ~/.aws/amazonq/mcp.json and available across all your projects. If you select local scope, the configuration is stored in .amazonq/mcp.json within your current project.
-   - Fill in values as applicable.
-
-3. **Manual Configuration**
-   - You can also manually edit the MCP configuration file located at `~/.aws/amazonq/mcp.json` globally or `.amazonq/mcp.json` locally.
+**Manual Configuration:**
+If you select global scope, the MCP server configuration is stored in `~/.aws/amazonq/mcp.json` and available across all your projects. If you select local scope, the configuration is stored in `.amazonq/mcp.json` within your current project.
 
 #### `~/.aws/amazonq/mcp.json`
 
@@ -89,11 +83,11 @@ See [Amazon Q Developer CLI documentation](https://docs.aws.amazon.com/amazonq/l
 ### Getting Started with Kiro
 
 <details>
-<summary>Install in Kiro</summary>
+<summary>Use in Kiro</summary>
 
 See [Kiro Model Context Protocol Documentation](https://kiro.dev/docs/mcp/configuration/) for details.
 
-1. Navigate `Kiro` > `MCP Servers`
+1. Navigate to `Kiro` > `MCP Servers`
 2. Add a new MCP server by clicking the `+ Add` button.
 3. Paste the configuration given below:
 
@@ -154,9 +148,9 @@ B. **Global Configuration** - For tools that you want to use across all projects
 }
 ```
 
-2. **Using MCP in Chat** The Composer Agent will automatically use any MCP tools that are listed under Available Tools on the MCP settings page if it determines them to be relevant. To prompt tool usage intentionally, please prompt Cursor to use the desired MCP Server you wish to use. For example, `Using the Powertools MCP Server, do...`
+2. **Using MCP in Chat:** The Composer Agent will automatically use any MCP tools that are listed under Available Tools on the MCP settings page if it determines them to be relevant. To prompt tool usage intentionally, please prompt Cursor to use the desired MCP Server you wish to use. For example, `Using the Powertools MCP Server, do...`
 
-3. **Tool Approval** By default, when Agent wants to use an MCP tool, it will display a message asking for your approval. You can use the arrow next to the tool name to expand the message and see what arguments the Agent is calling the tool with.
+3. **Tool Approval:** By default, when the Agent wants to use an MCP tool, it will display a message asking for your approval. You can use the arrow next to the tool name to expand the message and see what arguments the Agent is calling the tool with.
 
 </details>
 
@@ -216,26 +210,27 @@ Configure MCP servers in VS Code settings or in `.vscode/mcp.json` (see [VS Code
 
 </details>
 
-### Getting Started with Claude Desktop
+### Getting Started with Claude Code
 
 <details>
-<summary>Install in Claude Desktop</summary>
+<summary>Use in Claude Code</summary>
 
-1. **Locate Configuration File**
+**Add MCP Server using CLI commands:**
 
-   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+```bash
+claude mcp add powertools
+```
 
-2. **Edit Configuration**
-   - Open the configuration file in your preferred text editor
-   - Add the Powertools MCP server configuration
+**Manual Configuration (Recommended):**
+You can directly edit the configuration file located at `~/.claude.json`. This approach is more flexible and allows you to see all configurations at once.
 
-#### `claude_desktop_config.json`
+#### `~/.claude.json`
 
 ```json
 {
   "mcpServers": {
     "powertools": {
+      "type": "stdio",
       "command": "npx",
       "args": ["-y", "powertools-for-aws-mcp"]
     }
@@ -243,8 +238,8 @@ Configure MCP servers in VS Code settings or in `.vscode/mcp.json` (see [VS Code
 }
 ```
 
-3. **Restart Claude Desktop**
-   - Close and reopen Claude Desktop for the changes to take effect
+**Restart Claude Code:**
+After editing the config file, restart Claude Code for the changes to take effect.
 
 </details>
 
