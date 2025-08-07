@@ -6,6 +6,7 @@
 [![Status](https://img.shields.io/badge/Status-Experimental-orange.svg)](https://shields.io/)
 [![Stability](https://img.shields.io/badge/Stability-Evolving-yellow.svg)](https://shields.io/)
 [![Discord](https://img.shields.io/badge/Discord-Join_Community-7289da.svg)](https://discord.gg/B8zZKbbyET)
+[![smithery badge](https://smithery.ai/badge/@aws-powertools/powertools-mcp)](https://smithery.ai/server/@aws-powertools/powertools-mcp)
 
 The Powertools for AWS [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an MCP implementation that provides search functionality for the Powertools for AWS Lambda documentation across multiple runtimes. It allows your LLM agents to search for documentation and examples related to the toolkit, helping you to quickly find the information you need to use Powertools for AWS Lambda effectively.
 
@@ -44,6 +45,14 @@ Most clients that support MCP can use this server out of the box using a configu
 ```
 
 This setup uses the Node.js package manager to run the MCP server locally and communicate with it using the STDIO interface.
+
+### Installing via Smithery
+
+To install powertools-mcp for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@aws-powertools/powertools-mcp):
+
+```bash
+npx -y @smithery/cli install @aws-powertools/powertools-mcp --client claude
+```
 
 ## Development
 
