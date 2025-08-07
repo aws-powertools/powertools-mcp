@@ -23,6 +23,10 @@ We're actively seeking community feedback and feature suggestions [join our Disc
 
 ## Getting Started
 
+| Cursor | VS Code |
+|:------:|:-------:|
+| [![Coming Soon](https://img.shields.io/badge/Coming-Soon-gray?style=flat-square&logo=cursor&logoColor=white)](#getting-started-with-cursor) | [![Install on VS Code](https://img.shields.io/badge/Install_on-VS_Code-FF9900?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=Powertools%20for%20AWS%20MCP&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22powertools-for-aws-mcp%22%5D%7D) |
+
 Most clients that support MCP can use this server out of the box using a configuration similar to the following:
 
 > [!NOTE]
