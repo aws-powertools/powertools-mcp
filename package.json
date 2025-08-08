@@ -52,7 +52,7 @@
   "license": "MIT",
   "dependencies": {
     "@aws-lambda-powertools/logger": "^2.24.1",
-    "@modelcontextprotocol/sdk": "^1.17.1",
+    "@modelcontextprotocol/sdk": "^1.17.2",
     "@types/cacache": "^19.0.0",
     "@types/node": "^24.2.0",
     "cacache": "^20.0.0",
