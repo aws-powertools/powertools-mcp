@@ -1,6 +1,7 @@
 import { isNullOrUndefined } from '@aws-lambda-powertools/commons/typeutils';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import lunr from 'lunr';
+import { z } from 'zod';
 import {
   POWERTOOLS_BASE_URL,
   SEARCH_CONFIDENCE_THRESHOLD,
@@ -8,6 +9,7 @@ import {
 import { logger } from '../../logger.ts';
 import { buildResponse } from '../shared/buildResponse.ts';
 import { fetchWithCache } from '../shared/fetchWithCache.ts';
+import { schema } from './schemas.ts';
 import type { ToolProps } from './types.ts';
 
 /**
@@ -31,8 +33,9 @@ import type { ToolProps } from './types.ts';
  * @param props.runtime - the runtime to search in (e.g., 'python', 'typescript')
  * @param props.version - the version of the runtime to search in (e.g., 'latest', '1.0.0')
  */
-const tool = async (props: ToolProps): Promise<CallToolResult> => {
-  const { search, runtime, version } = props;
+const tool = async (args: unknown): Promise<CallToolResult> => {
+  const schemaObject = z.object(schema);
+  const { search, runtime, version } = schemaObject.parse(args);
   logger.appendKeys({ tool: 'searchDocs' });
   logger.appendKeys({ search, runtime, version });
 

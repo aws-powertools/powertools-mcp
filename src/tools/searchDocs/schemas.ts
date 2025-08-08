@@ -21,6 +21,6 @@ const schema = {
     .optional()
     .describe("version is always semantic 3 digit in the form x.y.z")
     .default("latest"),
-};
+} as const;
 
 export { schema };

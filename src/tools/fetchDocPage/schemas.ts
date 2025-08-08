@@ -44,6 +44,6 @@ const schema = {
       parsedUrl.pathname = `${parsedUrl.pathname}/index.md`;
       return parsedUrl;
     }),
-};
+} as const;
 
 export { schema };

@@ -123,11 +123,11 @@ describe('tool', () => {
   it('fetches a documentation page', async () => {
     // Prepare
     mocks.getFromCache.mockRejectedValueOnce(new Error('Cache miss'));
-    const url = new URL(`${baseUrl}metrics/index.md`);
-    const cacheKey = url.pathname;
+    const url = new URL(`${baseUrl}metrics`);
+    const cacheKey = `${url.pathname}/index.md`;
 
     // Act
-    const result = await tool({ url });
+    const result = await tool({ url: url.toString() });
 
     // Assess
     expect(result.content).toBeResponseWithText(
@@ -145,7 +145,7 @@ describe('tool', () => {
     const url = new URL(`${baseUrl}non-existent`);
 
     // Act
-    const result = await tool({ url });
+    const result = await tool({ url: url.toString() });
 
     // Assess
     expect(result.content).toBeResponseWithText(

@@ -1,8 +1,10 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { z } from 'zod';
 import { logger } from '../../logger.ts';
 import { buildResponse } from '../shared/buildResponse.ts';
 import { fetchWithCache } from '../shared/fetchWithCache.ts';
 import { name as toolName } from './constants.ts';
+import { schema } from './schemas.ts';
 import type { ToolProps } from './types.ts';
 
 /**
@@ -13,8 +15,9 @@ import type { ToolProps } from './types.ts';
  * @param props - options for fetching a documentation page
  * @param props.url - the URL of the documentation page to fetch
  */
-const tool = async (props: ToolProps): Promise<CallToolResult> => {
-  const { url } = props;
+const tool = async (args: unknown): Promise<CallToolResult> => {
+  const schemaObject = z.object(schema);
+  const { url } = schemaObject.parse(args);
   logger.appendKeys({ tool: toolName });
   logger.appendKeys({ url: url.toString() });
 
