@@ -88,7 +88,7 @@ If you select global scope, the MCP server configuration is stored in `~/.aws/am
 See [Kiro Model Context Protocol Documentation](https://kiro.dev/docs/mcp/configuration/) for details.
 
 1. Navigate to `Kiro` > `MCP Servers`
-2. Add a new MCP server by clicking the `+ Add` button.
+2. Add a new MCP server by selecting the `+ Add` button.
 3. Paste the configuration given below:
 
 #### `kiro_mcp_settings.json`
@@ -166,9 +166,9 @@ B. **Global Configuration** - For tools that you want to use across all projects
 
 2. **Add MCP Servers**
 
-   - Click "Add Server" to add a new MCP server
+   - Select "Add Server" to add a new MCP server
    - You can choose from available templates like GitHub, Puppeteer, PostgreSQL, etc.
-   - Alternatively, click "Add custom server" to configure your own server
+   - Alternatively, select "Add custom server" to configure your own server
 
 3. **Manual Configuration**
    - You can also manually edit the MCP configuration file located at `~/.codeium/windsurf/mcp_config.json`
