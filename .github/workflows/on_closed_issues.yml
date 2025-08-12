@@ -21,7 +21,7 @@ jobs:
     permissions:
       issues: write  # comment on issues
     steps:
-      - uses: aws-powertools/actions/.github/actions/close-issue-message@b8e12f37991bb03672113b65cae09d52d494bbef
+      - uses: aws-powertools/actions/.github/actions/close-issue-message@743fa57a003787b157991ea5c6e3cf0d40468676
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           message: |
