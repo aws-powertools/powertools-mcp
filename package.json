@@ -55,7 +55,7 @@
     "@modelcontextprotocol/sdk": "^1.17.3",
     "@types/cacache": "^19.0.0",
     "@types/node": "^24.2.1",
-    "cacache": "^20.0.0",
+    "cacache": "^20.0.1",
     "lunr": "^2.3.9",
     "zod": "^3.25.76"
   },
