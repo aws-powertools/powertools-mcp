@@ -60,7 +60,7 @@ See [Amazon Q Developer CLI documentation](https://docs.aws.amazon.com/amazonq/l
 **Add MCP Server using CLI commands:**
 
 ```bash
-qchat mcp add powertools npx -y powertools-for-aws-mcp
+qchat mcp add --name powertools --command "npx -y powertools-for-aws-mcp"
 ```
 
 **Manual Configuration:**
