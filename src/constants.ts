@@ -8,9 +8,9 @@ import {
 const MCP_SERVER_NAME = 'powertools-for-aws-mcp' as const;
 
 // Allowed domain for security
-const ALLOWED_DOMAIN = 'docs.powertools.aws.dev';
+const ALLOWED_DOMAIN = 'docs.aws.amazon.com';
 // Base URL for Powertools documentation
-const POWERTOOLS_BASE_URL = 'https://docs.powertools.aws.dev/lambda';
+const POWERTOOLS_BASE_URL = 'https://docs.aws.amazon.com/powertools';
 
 const FETCH_TIMEOUT_MS = 15000; // 15 seconds timeout for fetch operations
 

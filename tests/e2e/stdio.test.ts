@@ -47,6 +47,8 @@ describe('MCP Server e2e (child process)', () => {
         },
       },
     });
+    console.error('hello')
+    console.log(response.content[0].text);
 
     // Assess
     expect(response.content[0].type).toBe('text');

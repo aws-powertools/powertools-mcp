@@ -8,18 +8,29 @@ type ToolProps = {
 };
 
 // Define the structure of MkDocs search index
-interface MkDocsSearchIndex {
-  config: {
-    lang: string[];
-    separator: string;
-    pipeline: string[];
-  };
-  docs: Array<{
-    location: string;
-    title: string;
-    text: string;
-    tags?: string[];
-  }>;
+interface SearchConfig {
+  lang: string[];
+  separator: string;
+  pipeline: string[];
 }
 
-export type { ToolProps, MkDocsSearchIndex };
+interface SearchDocument {
+  location: string;
+  title: string;
+  text: string;
+  tags?: string[];
+  boost?: number;
+  parent?: SearchDocument;
+}
+
+interface SearchOptions {
+  suggest: boolean;
+}
+
+interface MkDocsSearchIndex {
+  config: SearchConfig;
+  docs: SearchDocument[];
+  options?: SearchOptions;
+}
+
+export type { ToolProps, MkDocsSearchIndex, SearchConfig, SearchDocument, SearchOptions };
