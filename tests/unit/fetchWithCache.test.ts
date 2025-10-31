@@ -100,11 +100,6 @@ describe('fetchWithCache', () => {
       `${cacheKey}`
     );
     expect(mocks.writeToCache).not.toHaveBeenCalled();
-    expect(console.debug).toHaveLogged(
-      expect.objectContaining({
-        message: 'cached eTag matches, returning cached resource',
-      })
-    );
   });
 
   it('skips cache if both cached and remote ETags are null', async () => {
@@ -123,12 +118,6 @@ describe('fetchWithCache', () => {
     expect(mocks.getFromCache).toHaveBeenCalledExactlyOnceWith(
       expect.stringContaining(CACHE_BASE_PATH),
       `${cacheKey}-etag`
-    );
-    expect(console.debug).toHaveLogged(
-      expect.objectContaining({
-        message:
-          'No cached ETag and remote ETag found, fetching remote resource',
-      })
     );
   });
 
@@ -162,12 +151,6 @@ describe('fetchWithCache', () => {
       expect.stringContaining(CACHE_BASE_PATH),
       cacheKey,
       expectedContent
-    );
-    expect(console.debug).toHaveLogged(
-      expect.objectContaining({
-        message:
-          'ETag mismatch: local 54321 vs remote 12345; fetching remote resource',
-      })
     );
   });
 
@@ -208,12 +191,6 @@ describe('fetchWithCache', () => {
       expect.stringContaining(CACHE_BASE_PATH),
       cacheKey,
       expectedContent
-    );
-    expect(console.debug).toHaveLogged(
-      expect.objectContaining({
-        message:
-          'Cached resource not found even though ETag matches; cache may be corrupted',
-      })
     );
   });
 

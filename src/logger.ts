@@ -5,6 +5,7 @@ import type {
   LogLevel,
   UnformattedAttributes,
 } from '@aws-lambda-powertools/logger/types';
+import { Console } from 'node:console';
 
 const logLevel = getStringFromEnv({
   key: 'LOG_LEVEL',
@@ -26,7 +27,24 @@ class CustomLogFormatter extends LogFormatter {
   }
 }
 
-const logger = new Logger({
+// Create a custom logger that redirects all output to stderr for MCP compatibility
+class MCPLogger extends Logger {
+  protected setConsole(): void {
+    // Always redirect stdout to stderr for MCP compatibility
+    // This ensures logs don't interfere with the MCP stdio protocol
+    this.console = new Console({
+      stdout: process.stderr,  // Redirect stdout to stderr
+      stderr: process.stderr,  // Keep stderr as stderr
+    });
+
+    // Patch console.trace to avoid printing stack trace (same as parent)
+    this.console.trace = (message: unknown, ...optionalParams: unknown[]) => {
+      this.console.log(message, ...optionalParams);
+    };
+  }
+}
+
+const logger = new MCPLogger({
   logLevel,
   logFormatter: new CustomLogFormatter(),
 });

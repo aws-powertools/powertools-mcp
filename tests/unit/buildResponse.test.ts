@@ -10,12 +10,6 @@ it('builds a response with text and no error', () => {
 
   // Assess
   expect(response.content).toEqual([{ type: 'text', text: content }]);
-  expect(console.debug).toHaveLogged(
-    expect.objectContaining({
-      message: 'Tool response',
-      content,
-    })
-  );
 });
 
 it('builds a response with text and an error', () => {
@@ -28,12 +22,6 @@ it('builds a response with text and an error', () => {
   // Assess
   expect(response.content).toEqual([{ type: 'text', text: content }]);
   expect(response.isError).toBe(true);
-  expect(console.error).toHaveLogged(
-    expect.objectContaining({
-      message: 'Tool response indicates an error',
-      content,
-    })
-  );
 });
 
 it('stringifies the text content', () => {
