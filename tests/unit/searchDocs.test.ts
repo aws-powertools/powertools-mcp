@@ -34,11 +34,17 @@ describe('tool', () => {
         () =>
           HttpResponse.text(
             JSON.stringify({
+              config: {
+                lang: ['en'],
+                separator: '[\\s\\-]+',
+                pipeline: ['stopWordFilter', 'stemmer']
+              },
               docs: [
                 {
                   location: 'features/logger/#buffering-logs',
                   title: 'Buffering logs',
                   text: "<p>Log buffering enables you to buffer logs for a specific request or invocation. Enable log buffering by passing <code>logBufferOptions</code> when initializing a Logger instance. You can buffer logs at the <code>WARNING</code>, <code>INFO</code>,  <code>DEBUG</code>, or <code>TRACE</code> level, and flush them automatically on error or manually as needed.</p> <p>This is useful when you want to reduce the number of log messages emitted while still having detailed logs when needed, such as when troubleshooting issues.</p> logBufferingGettingStarted.ts <pre><code>import { Logger } from '@aws-lambda-powertools/logger';\n\nconst logger = new Logger({\n  logBufferOptions: {\n    maxBytes: 20480,\n    flushOnErrorLog: true,\n  },\n});\n\nlogger.debug('This is a debug message'); // This is NOT buffered\n\nexport const handler = async () =&gt; {\n  logger.debug('This is a debug message'); // This is buffered\n  logger.info('This is an info message');\n\n  // your business logic here\n\n  logger.error('This is an error message'); // This also flushes the buffer\n  // or logger.flushBuffer(); // to flush the buffer manually\n};\n</code></pre>",
+                  tags: ['logger', 'buffering', 'debug']
                 },
                 {
                   location: 'features/logger/#configuring-the-buffer',
@@ -175,7 +181,7 @@ describe('tool', () => {
 
     // Assess
     expect(result.content).toBeResponseWithText(
-      `Failed to fetch search index for java latest: Invalid search index format for java latest: missing 'docs' property`
+      `Failed to fetch search index for java latest: Invalid search index format: missing docs array`
     );
     expect(result.isError).toBe(true);
   });

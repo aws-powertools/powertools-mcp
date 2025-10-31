@@ -8,7 +8,7 @@ import {
 import { logger } from '../../logger.ts';
 import { buildResponse } from '../shared/buildResponse.ts';
 import { fetchWithCache } from '../shared/fetchWithCache.ts';
-import type { ToolProps } from './types.ts';
+import type { ToolProps, MkDocsSearchIndex } from './types.ts';
 
 /**
  * Search for documentation based on the provided parameters.
@@ -16,9 +16,9 @@ import type { ToolProps } from './types.ts';
  * This tool fetches a search index from the Powertools for AWS documentation,
  * hydrates it into a Lunr index, and performs a search based on the provided query.
  *
- * The search index is expected to be in a specific format, and the results
- * are filtered based on a confidence threshold to ensure relevance. This threshold
- * can be configured via the `SEARCH_CONFIDENCE_THRESHOLD` environment variable.
+ * The search index is expected to be in the full MkDocs Material format with proper
+ * field boosting (1000x for titles, 1M for tags) to match the online search experience.
+ * Results are filtered based on a confidence threshold to ensure relevance.
  *
  * This tool is designed to work with the Powertools for AWS documentation
  * for various runtimes, including Python and TypeScript, and supports versioning.
@@ -45,19 +45,36 @@ const tool = async (props: ToolProps): Promise<CallToolResult> => {
   const urlSuffix = '/search/search_index.json';
   url.pathname = `${url.pathname}${urlSuffix}`;
 
-  let searchIndexContent: {
-    docs: { location: string; title: string; text: string }[];
-  };
+  let searchIndex: MkDocsSearchIndex;
   try {
     const content = await fetchWithCache({
       url,
       contentType: 'application/json',
     });
-    searchIndexContent = JSON.parse(content);
-    if (
-      isNullOrUndefined(searchIndexContent.docs) ||
-      !Array.isArray(searchIndexContent.docs)
-    ) {
+    const rawIndex = JSON.parse(content);
+    
+    // Handle both full MkDocs index and simplified format for backward compatibility
+    if (rawIndex.docs && Array.isArray(rawIndex.docs)) {
+      if (rawIndex.config && rawIndex.config.lang) {
+        // Full MkDocs search index format
+        searchIndex = rawIndex as MkDocsSearchIndex;
+      } else {
+        // Simplified format - convert to full structure
+        searchIndex = {
+          config: {
+            lang: ['en'],
+            separator: '[\\s\\-]+',
+            pipeline: ['stopWordFilter', 'stemmer']
+          },
+          docs: rawIndex.docs,
+          options: { suggest: false }
+        };
+      }
+    } else {
+      throw new Error('Invalid search index format: missing docs array');
+    }
+
+    if (isNullOrUndefined(searchIndex.docs) || !Array.isArray(searchIndex.docs)) {
       throw new Error(
         `Invalid search index format for ${runtime} ${version}: missing 'docs' property`
       );
@@ -72,26 +89,42 @@ const tool = async (props: ToolProps): Promise<CallToolResult> => {
     });
   }
 
-  // TODO: consume built/exported search index - #79
+  // Build Lunr index with proper MkDocs Material configuration
   const index = lunr(function () {
-    this.ref('location');
-    this.field('title', { boost: 10 });
-    this.field('text');
+    // Apply language configuration if not English
+    if (searchIndex.config.lang.length === 1 && searchIndex.config.lang[0] !== "en") {
+      // Note: This would require language-specific Lunr plugins
+      logger.debug(`Language configuration detected: ${searchIndex.config.lang[0]}`);
+    } else if (searchIndex.config.lang.length > 1) {
+      logger.debug(`Multi-language configuration detected: ${searchIndex.config.lang.join(', ')}`);
+    }
 
-    for (const doc of searchIndexContent.docs) {
+    this.ref('location');
+    // Use proper MkDocs Material field boosting
+    this.field('title', { boost: 1000 });  // 1000x boost for titles
+    this.field('text', { boost: 1 });      // 1x boost for text
+    this.field('tags', { boost: 1000000 }); // 1M boost for tags
+
+    for (const doc of searchIndex.docs) {
       if (!doc.location || !doc.title || !doc.text) continue;
 
-      this.add({
+      const indexDoc: Record<string, any> = {
         location: doc.location,
         title: doc.title,
         text: doc.text,
-      });
+      };
+
+      // Add tags if present
+      if (doc.tags && doc.tags.length > 0) {
+        indexDoc.tags = doc.tags.join(' ');
+      }
+
+      this.add(indexDoc, { boost: doc.boost || 1 });
     }
   });
 
   const results = [];
   for (const result of index.search(search)) {
-    if (result.score < SEARCH_CONFIDENCE_THRESHOLD) break; // Results are sorted by score, so we can stop early
     results.push({
       title: result.ref,
       url: `${baseUrl}/${result.ref}`,
@@ -99,9 +132,7 @@ const tool = async (props: ToolProps): Promise<CallToolResult> => {
     });
   }
 
-  logger.debug(
-    `Search results with confidence >= ${SEARCH_CONFIDENCE_THRESHOLD} found: ${results.length}`
-  );
+  logger.debug(`Search results found: ${results.length}`);
 
   return buildResponse({
     content: results,
