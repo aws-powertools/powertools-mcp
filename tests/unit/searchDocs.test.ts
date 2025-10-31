@@ -181,7 +181,7 @@ describe('tool', () => {
 
     // Assess
     expect(result.content).toBeResponseWithText(
-      `Failed to fetch search index for java latest: Invalid search index format: missing docs array`
+      'Failed to fetch search index for java latest: Invalid search index format: missing docs array'
     );
     expect(result.isError).toBe(true);
   });

@@ -3,7 +3,6 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import lunr from 'lunr';
 import {
   POWERTOOLS_BASE_URL,
-  SEARCH_CONFIDENCE_THRESHOLD,
 } from '../../constants.ts';
 import { logger } from '../../logger.ts';
 import { buildResponse } from '../shared/buildResponse.ts';
@@ -52,10 +51,10 @@ const tool = async (props: ToolProps): Promise<CallToolResult> => {
       contentType: 'application/json',
     });
     const rawIndex = JSON.parse(content);
-    
+
     // Handle both full MkDocs index and simplified format for backward compatibility
     if (rawIndex.docs && Array.isArray(rawIndex.docs)) {
-      if (rawIndex.config && rawIndex.config.lang) {
+      if (rawIndex.config?.lang) {
         // Full MkDocs search index format
         searchIndex = rawIndex as MkDocsSearchIndex;
       } else {
@@ -108,7 +107,7 @@ const tool = async (props: ToolProps): Promise<CallToolResult> => {
     for (const doc of searchIndex.docs) {
       if (!doc.location || !doc.title || !doc.text) continue;
 
-      const indexDoc: Record<string, any> = {
+      const indexDoc: Record<string, unknown> = {
         location: doc.location,
         title: doc.title,
         text: doc.text,
