@@ -1,5 +1,5 @@
 import { getStringFromEnv } from '@aws-lambda-powertools/commons/utils/env';
-import { Logger, LogFormatter, LogItem } from '@aws-lambda-powertools/logger';
+import { LogFormatter, Logger, LogItem } from '@aws-lambda-powertools/logger';
 import type {
   LogAttributes,
   LogLevel,
@@ -27,26 +27,15 @@ class CustomLogFormatter extends LogFormatter {
   }
 }
 
-// Create a custom logger that redirects all output to stderr for MCP compatibility
-class MCPLogger extends Logger {
-  protected setConsole(): void {
-    // Always redirect stdout to stderr for MCP compatibility
-    // This ensures logs don't interfere with the MCP stdio protocol
-    this.console = new Console({
-      stdout: process.stderr,  // Redirect stdout to stderr
-      stderr: process.stderr,  // Keep stderr as stderr
-    });
-
-    // Patch console.trace to avoid printing stack trace (same as parent)
-    this.console.trace = (message: unknown, ...optionalParams: unknown[]) => {
-      this.console.log(message, ...optionalParams);
-    };
-  }
-}
-
-const logger = new MCPLogger({
+const logger = new Logger({
   logLevel,
   logFormatter: new CustomLogFormatter(),
+});
+
+// Override the logger's console to write to stderr
+(logger as any).console = new Console({
+  stdout: process.stderr,
+  stderr: process.stderr,
 });
 
 export { logger };
