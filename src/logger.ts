@@ -1,10 +1,11 @@
 import { getStringFromEnv } from '@aws-lambda-powertools/commons/utils/env';
-import { Logger, LogFormatter, LogItem } from '@aws-lambda-powertools/logger';
+import { LogFormatter, Logger, LogItem } from '@aws-lambda-powertools/logger';
 import type {
   LogAttributes,
   LogLevel,
   UnformattedAttributes,
 } from '@aws-lambda-powertools/logger/types';
+import { Console } from 'node:console';
 
 const logLevel = getStringFromEnv({
   key: 'LOG_LEVEL',
@@ -29,6 +30,12 @@ class CustomLogFormatter extends LogFormatter {
 const logger = new Logger({
   logLevel,
   logFormatter: new CustomLogFormatter(),
+});
+
+// Override the logger's console to write to stderr
+(logger as any).console = new Console({
+  stdout: process.stderr,
+  stderr: process.stderr,
 });
 
 export { logger };
