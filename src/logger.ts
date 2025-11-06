@@ -33,10 +33,10 @@ const logger = new Logger({
 });
 if (process.env.NODE_ENV !== 'test') {
   // @ts-expect-error
-  (logger as unknown).console = new Console({
+  /* v8 ignore start */ (logger as unknown).console = new Console({
     stdout: process.stderr,
     stderr: process.stderr,
-  });
+  }); /* v8 ignore stop */
 }
 
 export { logger };
