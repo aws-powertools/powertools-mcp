@@ -69,7 +69,7 @@
     "lint-staged": "^16.1.6",
     "msw": "^2.12.0",
     "rimraf": "^6.0.1",
-    "typescript": "^5.9.2",
+    "typescript": "^5.9.3",
     "vitest": "^3.2.3"
   }
 }
