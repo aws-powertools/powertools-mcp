@@ -31,12 +31,12 @@ const logger = new Logger({
   logLevel,
   logFormatter: new CustomLogFormatter(),
 });
-if (process.env.NODE_ENV !== 'test') {
+/* v8 ignore start */ if (process.env.NODE_ENV !== 'test') {
   // @ts-expect-error
-  /* v8 ignore start */ (logger as unknown).console = new Console({
+  (logger as unknown).console = new Console({
     stdout: process.stderr,
     stderr: process.stderr,
-  }); /* v8 ignore stop */
-}
+  });
+} /* v8 ignore stop */
 
 export { logger };
