@@ -1,6 +1,8 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { expect, vi } from 'vitest';
 
+vi.stubEnv('NODE_ENV', 'test');
+
 // Mock console methods to prevent output during tests
 vi.spyOn(console, 'error').mockReturnValue();
 vi.spyOn(console, 'warn').mockReturnValue();
