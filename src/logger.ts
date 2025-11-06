@@ -1,5 +1,6 @@
+import { Console } from 'node:console';
 import { getStringFromEnv } from '@aws-lambda-powertools/commons/utils/env';
-import { Logger, LogFormatter, LogItem } from '@aws-lambda-powertools/logger';
+import { LogFormatter, Logger, LogItem } from '@aws-lambda-powertools/logger';
 import type {
   LogAttributes,
   LogLevel,
@@ -30,5 +31,12 @@ const logger = new Logger({
   logLevel,
   logFormatter: new CustomLogFormatter(),
 });
+if (process.env.NODE_ENV !== 'test') {
+  // @ts-expect-error
+  (logger as unknown).console = new Console({
+    stdout: process.stderr,
+    stderr: process.stderr,
+  });
+}
 
 export { logger };
