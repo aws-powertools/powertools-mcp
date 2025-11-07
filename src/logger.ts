@@ -1,5 +1,6 @@
+import { Console } from 'node:console';
 import { getStringFromEnv } from '@aws-lambda-powertools/commons/utils/env';
-import { Logger, LogFormatter, LogItem } from '@aws-lambda-powertools/logger';
+import { LogFormatter, Logger, LogItem } from '@aws-lambda-powertools/logger';
 import type {
   LogAttributes,
   LogLevel,
@@ -30,5 +31,19 @@ const logger = new Logger({
   logLevel,
   logFormatter: new CustomLogFormatter(),
 });
+/**
+ * Since this MCP server uses the stdio protocol, we always
+ * need to emit logs to `stderr` to avoid interfering with MCP's
+ * communication over `stdout`.
+ *
+ * See https://modelcontextprotocol.io/docs/develop/build-server#logging-in-mcp-servers
+ */
+/* v8 ignore start */ if (process.env.NODE_ENV !== 'test') {
+  // @ts-expect-error
+  (logger as unknown).console = new Console({
+    stdout: process.stderr,
+    stderr: process.stderr,
+  });
+} /* v8 ignore stop */
 
 export { logger };

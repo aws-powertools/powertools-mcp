@@ -75,8 +75,9 @@ const tool = async (props: ToolProps): Promise<CallToolResult> => {
   // TODO: consume built/exported search index - #79
   const index = lunr(function () {
     this.ref('location');
-    this.field('title', { boost: 10 });
-    this.field('text');
+    this.field('title', { boost: 1000 });
+    this.field('text', { boost: 1 });
+    this.field('tags', { boost: 1000000 });
 
     for (const doc of searchIndexContent.docs) {
       if (!doc.location || !doc.title || !doc.text) continue;
