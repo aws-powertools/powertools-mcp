@@ -31,6 +31,13 @@ const logger = new Logger({
   logLevel,
   logFormatter: new CustomLogFormatter(),
 });
+/**
+ * Since this MCP server uses the stdio protocol, we always
+ * need to emit logs to `stderr` to avoid interfering with MCP's
+ * communication over `stdout`.
+ *
+ * See https://modelcontextprotocol.io/docs/develop/build-server#logging-in-mcp-servers
+ */
 /* v8 ignore start */ if (process.env.NODE_ENV !== 'test') {
   // @ts-expect-error
   (logger as unknown).console = new Console({
