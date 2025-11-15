@@ -38,12 +38,12 @@ const logger = new Logger({
  *
  * See https://modelcontextprotocol.io/docs/develop/build-server#logging-in-mcp-servers
  */
-/* v8 ignore start */ if (process.env.NODE_ENV !== 'test') {
+/* v8 ignore next -- @preserve */ if (process.env.NODE_ENV !== 'test') {
   // @ts-expect-error
   (logger as unknown).console = new Console({
     stdout: process.stderr,
     stderr: process.stderr,
   });
-} /* v8 ignore stop */
+}
 
 export { logger };

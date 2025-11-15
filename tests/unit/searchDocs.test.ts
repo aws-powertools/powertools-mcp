@@ -10,6 +10,7 @@ import {
   vi,
 } from 'vitest';
 import { POWERTOOLS_BASE_URL } from '../../src/constants.ts';
+import { schema } from '../../src/tools/searchDocs/schemas.ts';
 import { tool } from '../../src/tools/searchDocs/tool.ts';
 
 const mocks = vi.hoisted(() => {
@@ -194,6 +195,33 @@ describe('tool', () => {
     });
 
     // Assess
-    expect(JSON.parse(result.content[0].text as string)).toHaveLength(0);
+    if (result.content[0].type === 'text') {
+      expect(JSON.parse(result.content[0].text)).toHaveLength(0);
+    } else {
+      throw new Error('Expected first search result to be text');
+    }
+  });
+
+  it('normalizes the tool input', async () => {
+    // Prepare
+    const input = {
+      version: ' LaTeSt ',
+      runtime: 'typescript',
+      search: ' LoG BuFfERinG ',
+    };
+
+    // Act
+    const parsed = {
+      search: schema.search.parse(input.search),
+      runtime: schema.runtime.parse(input.runtime),
+      version: schema.version.parse(input.version),
+    };
+
+    // Assess
+    expect(parsed).toEqual({
+      search: 'log buffering',
+      runtime: 'typescript',
+      version: 'latest',
+    });
   });
 });
