@@ -15,6 +15,7 @@ export default defineConfig({
         ...coverageConfigDefaults.exclude,
         'src/index.ts',
         'src/tools/*/index.ts',
+        'src/tools/*/README.md',
       ],
     },
     setupFiles: ['./tests/setupEnv.ts'],

@@ -9,15 +9,14 @@ import { runtimes } from '../../constants.ts';
 const schema = {
   search: z
     .string()
-    .refine((val) => val.toLowerCase().trim())
+    .transform((val) => val.toLowerCase().trim())
     .describe('what to search for'),
   runtime: z
     .enum(runtimes)
-    .refine((val) => val.toLowerCase().trim())
     .describe('the Powertools for AWS runtime to search the documentation for'),
   version: z
     .string()
-    .refine((val) => val.toLowerCase().trim())
+    .transform((val) => val.toLowerCase().trim())
     .optional()
     .describe('version is always semantic 3 digit in the form x.y.z')
     .default('latest'),
