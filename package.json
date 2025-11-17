@@ -67,7 +67,7 @@
     "@vitest/coverage-v8": "^4.0.9",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.6",
-    "msw": "^2.12.1",
+    "msw": "^2.12.2",
     "rimraf": "^6.1.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.9"
