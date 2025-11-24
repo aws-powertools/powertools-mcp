@@ -64,11 +64,11 @@
     "@modelcontextprotocol/inspector": "^0.17.2",
     "@types/lunr": "^2.3.7",
     "@types/make-fetch-happen": "^10.0.4",
-    "@vitest/coverage-v8": "^4.0.10",
+    "@vitest/coverage-v8": "^4.0.12",
     "husky": "^9.1.7",
-    "lint-staged": "^16.2.6",
+    "lint-staged": "^16.2.7",
     "msw": "^2.12.2",
-    "rimraf": "^6.1.0",
+    "rimraf": "^6.1.2",
     "typescript": "^5.9.3",
     "vitest": "^4.0.9"
   }
