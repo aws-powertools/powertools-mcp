@@ -64,7 +64,7 @@
     "@modelcontextprotocol/inspector": "^0.17.2",
     "@types/lunr": "^2.3.7",
     "@types/make-fetch-happen": "^10.0.4",
-    "@vitest/coverage-v8": "^4.0.12",
+    "@vitest/coverage-v8": "^4.0.13",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "msw": "^2.12.3",
