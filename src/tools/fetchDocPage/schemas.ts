@@ -11,7 +11,6 @@ import { ALLOWED_DOMAIN, runtimes } from '../../constants.ts';
  */
 const schema = {
   url: z
-    .string()
     .url()
     .refine((url) => {
       const parsedUrl = new URL(url);
