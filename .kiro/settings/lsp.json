@@ -1,0 +1,33 @@
+{
+  "languages": {
+    "typescript": {
+      "name": "typescript-language-server",
+      "command": "typescript-language-server",
+      "args": [
+        "--stdio"
+      ],
+      "file_extensions": [
+        "ts",
+        "js",
+        "tsx",
+        "jsx"
+      ],
+      "project_patterns": [
+        "package.json",
+        "tsconfig.json"
+      ],
+      "exclude_patterns": [
+        "**/node_modules/**",
+        "**/dist/**"
+      ],
+      "source_patterns": [],
+      "multi_workspace": false,
+      "initialization_options": {
+        "preferences": {
+          "disableSuggestions": false
+        }
+      },
+      "request_timeout_secs": 60
+    }
+  }
+}
