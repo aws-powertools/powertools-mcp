@@ -61,7 +61,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.8",
-    "@modelcontextprotocol/inspector": "^0.17.2",
+    "@modelcontextprotocol/inspector": "^0.17.5",
     "@types/lunr": "^2.3.7",
     "@types/make-fetch-happen": "^10.0.4",
     "@vitest/coverage-v8": "^4.0.15",
