@@ -60,7 +60,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.9",
+    "@biomejs/biome": "^2.4.10",
     "@modelcontextprotocol/inspector": "^0.21.1",
     "@types/lunr": "^2.3.7",
     "@types/make-fetch-happen": "^10.0.4",
