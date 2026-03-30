@@ -6,7 +6,6 @@
     "experimentalDecorators": true,
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "baseUrl": ".",
     // "traceResolution": true, // Enable this to debug module resolution issues
     "declaration": true,
     "removeComments": false,
@@ -20,7 +19,8 @@
     "rewriteRelativeImportExtensions": true,
     "outDir": "dist",
     "sourceMap": true,
-    "rootDir": "src"
+    "rootDir": "src",
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"]
 }
